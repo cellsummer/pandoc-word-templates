@@ -30,6 +30,35 @@ keeps every rule hairline. B triples the white space, drops numbering and sets a
 light title. D reverses the title block out of burgundy and runs a charcoal header band
 across its tables.
 
+## Preview
+
+The specimen report each template carries, rendered to PDF. Click any page for the full
+size image.
+
+| A — Chancery | B — Meridian |
+|:---:|:---:|
+| <a href="docs/preview/chancery-page-1.png"><img src="docs/preview/chancery-page-1.png" width="430" alt="Chancery, page one"></a> | <a href="docs/preview/meridian-page-1.png"><img src="docs/preview/meridian-page-1.png" width="430" alt="Meridian, page one"></a> |
+| Classic executive: numbered headings, justified text, hairline rules | Modern and open: no numbering, generous leading, a light title |
+
+| C — Foundry | D — Atlas |
+|:---:|:---:|
+| <a href="docs/preview/foundry-page-1.png"><img src="docs/preview/foundry-page-1.png" width="430" alt="Foundry, page one"></a> | <a href="docs/preview/atlas-page-1.png"><img src="docs/preview/atlas-page-1.png" width="430" alt="Atlas, page one"></a> |
+| Dense technical: reversed heading bar, tight spacing, full grid tables | Bold editorial: reversed title block, charcoal table header |
+
+Tables, figures, equations and the light code panel:
+
+| A — Chancery | B — Meridian |
+|:---:|:---:|
+| <a href="docs/preview/chancery-detail.png"><img src="docs/preview/chancery-detail.png" width="430" alt="Chancery, tables and code"></a> | <a href="docs/preview/meridian-detail.png"><img src="docs/preview/meridian-detail.png" width="430" alt="Meridian, tables and code"></a> |
+
+| C — Foundry | D — Atlas |
+|:---:|:---:|
+| <a href="docs/preview/foundry-detail.png"><img src="docs/preview/foundry-detail.png" width="430" alt="Foundry, tables and code"></a> | <a href="docs/preview/atlas-detail.png"><img src="docs/preview/atlas-detail.png" width="430" alt="Atlas, tables and code"></a> |
+
+These pages were rendered with LibreOffice on a machine without Aptos, Calibri or
+Consolas installed, so the letterforms are substitutes. Layout, spacing and colour are
+accurate; the type is not.
+
 ## Fonts
 
 | Role | A, B, D | C | Ships with |
@@ -159,6 +188,7 @@ Source: consolidated ledger extract, 31 August 2026.
 
     templates/build_reference.py       all four templates, as one parameterised script
     templates/*-reference.docx         the built reference documents
+    docs/preview/                      the screenshots used above
     test/sample.md                     exercises every supported element
     preview/                           the eight HTML style proposals from the review round
 
