@@ -1,0 +1,62 @@
+/* ---- preview frame: simulates an A4 page, not part of the Word style ---- */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: #6d7076; }
+body { margin: 0; padding: 32px 16px 64px; }
+.page {
+  width: 21cm; min-height: 29.7cm; margin: 0 auto; background: #fff;
+  padding: 2.2cm 2.1cm 2cm; box-shadow: 0 10px 40px rgba(0,0,0,.35);
+}
+@media (max-width: 880px) { .page { width: 100%; padding: 24px; } }
+
+.running-head, .running-foot {
+  display: flex; justify-content: space-between; gap: 1em;
+  font-size: 8.5pt; letter-spacing: .04em;
+}
+.running-foot { justify-content: space-between; }
+
+hr.pagebreak {
+  border: 0; border-top: 1px dashed #b9bcc2; margin: 2.4em 0; position: relative;
+}
+hr.pagebreak::after {
+  content: attr(data-label); position: absolute; top: -.72em; left: 50%; transform: translateX(-50%);
+  background: #fff; padding: 0 .8em; font: 400 7.5pt/1 "Segoe UI", Arial, sans-serif;
+  color: #9aa0a6; letter-spacing: .12em; text-transform: uppercase;
+}
+
+/* ---- charts ---- */
+figure svg { width: 100%; height: auto; display: block; }
+svg .axis { stroke-width: 1; }
+svg .gridlines line { stroke-width: 1; }
+svg text { font-size: 11px; }
+svg .ticks text, svg .bar-values text { text-anchor: middle; }
+svg .ticks text { text-anchor: end; }
+svg .bar-labels text { text-anchor: middle; }
+
+.photo-frame {
+  display: flex; align-items: center; justify-content: center; height: 4.6cm;
+  font-size: 9pt; letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* ---- math layout ---- */
+.math-display { display: flex; align-items: center; gap: 1em; }
+.math-body { flex: 1; text-align: center; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 .25em; }
+.frac .num-part { padding: 0 .35em .12em; }
+.frac .den-part { padding: .12em .35em 0; border-top: 1px solid currentColor; }
+.radicand { border-top: 1px solid currentColor; padding: .15em .25em 0; margin-left: -.15em; }
+
+/* ---- tables ---- */
+table { width: 100%; border-collapse: collapse; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---- toc ---- */
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc li { display: flex; align-items: baseline; gap: .6em; }
+.toc li > span:first-child { flex: 0 1 auto; }
+.toc li::after { content: ""; flex: 1 1 auto; border-bottom: 1px dotted #b9bcc2; transform: translateY(-.25em); order: 1; }
+.toc .toc-page { order: 2; font-variant-numeric: tabular-nums; }
+.toc-2 { padding-left: 1.2em; }
+.toc-3 { padding-left: 2.4em; }
+
+kbd { font: inherit; }
+.footnotes ol { padding-left: 1.4em; }

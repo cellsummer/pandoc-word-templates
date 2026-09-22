@@ -1,0 +1,221 @@
+<div class="page">
+
+  <div class="running-head"><span class="rh-left">Global Operations Review</span><span class="rh-right">Confidential — Internal Use Only</span></div>
+
+  <!-- ============ TITLE BLOCK ============ -->
+  <section class="titleblock">
+    <p class="doc-kicker">Annual Report</p>
+    <h1 class="title">Operational Resilience and Capital Efficiency</h1>
+    <p class="subtitle">Consolidated findings for fiscal year 2026 across the four operating regions</p>
+    <div class="meta">
+      <p class="author">Prepared by Strategy &amp; Analytics</p>
+      <p class="date">21 September 2026</p>
+      <p class="docref">Document reference: GOR-2026-014 · Version 3.1</p>
+    </div>
+  </section>
+
+  <!-- ============ TABLE OF CONTENTS ============ -->
+  <nav class="toc">
+    <p class="toc-title">Contents</p>
+    <ul>
+      <li class="toc-1"><span>Executive summary</span><span class="toc-page">3</span></li>
+      <li class="toc-1"><span>Method and scope</span><span class="toc-page">5</span></li>
+      <li class="toc-2"><span>Data sources</span><span class="toc-page">6</span></li>
+      <li class="toc-2"><span>Limitations</span><span class="toc-page">8</span></li>
+      <li class="toc-1"><span>Regional performance</span><span class="toc-page">11</span></li>
+      <li class="toc-3"><span>Cost per transaction</span><span class="toc-page">14</span></li>
+    </ul>
+  </nav>
+
+  <hr class="pagebreak" data-label="Page break">
+
+  <!-- ============ HEADINGS + BODY ============ -->
+  <h1>Executive summary</h1>
+
+  <p class="first-paragraph">The group completed the year with a stable cost base and an improved capital position. Throughput increased in three of the four regions, while the cost per transaction decreased by 6.4 per cent. The remainder of this report gives the evidence for these results and the actions proposed for the next period.</p>
+
+  <p>Two conditions limit the conclusions. First, the reconciliation of the Southern region ledger was not complete at the reporting date. Second, the new settlement platform was live for only seven months, so the annualised figures are estimates. Both conditions are described in <a href="#scope">Method and scope</a>.</p>
+
+  <p class="lead">Recommendation: approve the second phase of the platform migration and release the contingency reserve of 12.4 million.</p>
+
+  <h2 id="scope">Method and scope</h2>
+  <p>The analysis covers all entities consolidated at 31 August 2026. Transactions below the materiality threshold of 25,000 were excluded, except where they formed part of a recurring series.</p>
+
+  <h3>Data sources</h3>
+  <p>Three systems supplied the primary records. Where the systems disagreed, the general ledger was used as the reference. Manual adjustments are listed in Appendix B and are identified with the marker <code>ADJ-</code> followed by the sequence number.</p>
+
+  <h4>Reconciliation procedure</h4>
+  <p>Each regional controller confirmed the closing balance in writing. The confirmation was matched against the automated extract before the figures entered this report.</p>
+
+  <h5>Exception handling</h5>
+  <p>An exception was raised when the difference was more than 0.5 per cent of the regional total. Fourteen exceptions were raised, and twelve were closed before the reporting date.</p>
+
+  <h6>Residual items</h6>
+  <p>The two open items relate to a currency translation in the Southern region and to an unposted supplier credit. Neither item is material on its own.</p>
+
+  <!-- ============ LISTS ============ -->
+  <h2>Findings</h2>
+  <p>The review produced four findings. They are given in order of financial effect.</p>
+
+  <ul>
+    <li>Settlement cycles decreased from four days to one day in the regions that use the new platform.
+      <ul>
+        <li>Northern region: full migration completed in March.</li>
+        <li>Eastern region: partial migration, two legacy queues remain.</li>
+      </ul>
+    </li>
+    <li>Manual intervention rates stay above target in high-value corridors.</li>
+    <li>Vendor concentration increased. One supplier now provides 38 per cent of processing capacity.</li>
+    <li>Recovery time for the primary ledger is 47 minutes against a target of 30 minutes.</li>
+  </ul>
+
+  <p>The proposed actions follow the same order.</p>
+
+  <ol>
+    <li>Complete the Eastern region migration before the end of the first quarter.
+      <ol>
+        <li>Decommission the legacy queues.</li>
+        <li>Transfer the reconciliation rules to the new engine.</li>
+      </ol>
+    </li>
+    <li>Introduce a second processing supplier for corridors above 50 million per month.</li>
+    <li>Rehearse the ledger recovery procedure each quarter and record the measured time.</li>
+  </ol>
+
+  <dl>
+    <dt>Cost per transaction</dt>
+    <dd>Total processing cost divided by the number of settled transactions in the period.</dd>
+    <dt>Manual intervention rate</dt>
+    <dd>The share of transactions that need an operator action before settlement.</dd>
+    <dt>Recovery time objective</dt>
+    <dd>The maximum time permitted between the loss of a service and its return to operation.</dd>
+  </dl>
+
+  <!-- ============ QUOTE + CALLOUT ============ -->
+  <blockquote>
+    <p>The control environment is adequate for the current volume. It will not be adequate at twice the current volume without further automation.</p>
+    <p class="attribution">— Internal Audit, interim opinion, July 2026</p>
+  </blockquote>
+
+  <div class="callout callout-note">
+    <p class="callout-title">Note</p>
+    <p>The figures in this section are unaudited. The audited figures will be released with the statutory accounts in November.</p>
+  </div>
+
+  <div class="callout callout-warning">
+    <p class="callout-title">Caution</p>
+    <p>Vendor concentration above 35 per cent breaches the group risk appetite statement and needs board acknowledgement.</p>
+  </div>
+
+  <!-- ============ TABLE ============ -->
+  <h2>Regional performance</h2>
+  <p>Table 1 gives the principal measures for each region. Amounts are in millions of euro unless stated otherwise.</p>
+
+  <table>
+    <caption>Table 1 — Principal measures by region, fiscal year 2026</caption>
+    <thead>
+      <tr>
+        <th scope="col">Region</th>
+        <th scope="col" class="num">Volume (m)</th>
+        <th scope="col" class="num">Revenue</th>
+        <th scope="col" class="num">Cost per txn</th>
+        <th scope="col" class="num">Change</th>
+        <th scope="col">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><th scope="row">Northern</th><td class="num">412.8</td><td class="num">1,204.5</td><td class="num">0.284</td><td class="num pos">−8.1%</td><td>Complete</td></tr>
+      <tr><th scope="row">Eastern</th><td class="num">318.2</td><td class="num">987.1</td><td class="num">0.311</td><td class="num pos">−5.2%</td><td>In progress</td></tr>
+      <tr><th scope="row">Southern</th><td class="num">204.6</td><td class="num">612.4</td><td class="num">0.377</td><td class="num neg">+1.9%</td><td>Under review</td></tr>
+      <tr><th scope="row">Western</th><td class="num">289.9</td><td class="num">845.0</td><td class="num">0.298</td><td class="num pos">−6.8%</td><td>Complete</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><th scope="row">Group</th><td class="num">1,225.5</td><td class="num">3,649.0</td><td class="num">0.312</td><td class="num pos">−6.4%</td><td>—</td></tr>
+    </tfoot>
+  </table>
+
+  <p class="table-note">Source: consolidated ledger extract, 31 August 2026. Southern region figures are provisional.<a href="#fn1" class="fnref" id="fnref1">1</a></p>
+
+  <!-- ============ FIGURE / CHART ============ -->
+  <figure>
+    <svg viewBox="0 0 640 260" role="img" aria-label="Bar chart of cost per transaction by region">
+      <g class="chart">
+        <line class="axis" x1="70" y1="20" x2="70" y2="210"/>
+        <line class="axis" x1="70" y1="210" x2="610" y2="210"/>
+        <g class="gridlines">
+          <line x1="70" y1="163" x2="610" y2="163"/>
+          <line x1="70" y1="115" x2="610" y2="115"/>
+          <line x1="70" y1="67" x2="610" y2="67"/>
+        </g>
+        <g class="ticks">
+          <text x="60" y="214">0.0</text><text x="60" y="167">0.1</text><text x="60" y="119">0.2</text><text x="60" y="71">0.3</text>
+        </g>
+        <g class="bars">
+          <rect x="110" y="74" width="78" height="136"/>
+          <rect x="240" y="61" width="78" height="149"/>
+          <rect x="370" y="29" width="78" height="181"/>
+          <rect x="500" y="67" width="78" height="143"/>
+        </g>
+        <g class="bar-labels">
+          <text x="149" y="230">Northern</text><text x="279" y="230">Eastern</text><text x="409" y="230">Southern</text><text x="539" y="230">Western</text>
+        </g>
+        <g class="bar-values">
+          <text x="149" y="66">0.284</text><text x="279" y="53">0.311</text><text x="409" y="21">0.377</text><text x="539" y="59">0.298</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Figure 1 — Cost per transaction by region, euro per settled transaction</figcaption>
+  </figure>
+
+  <figure class="photo">
+    <div class="photo-frame">Photograph or screenshot placeholder</div>
+    <figcaption>Figure 2 — Settlement operations centre, Northern region</figcaption>
+  </figure>
+
+  <!-- ============ MATH ============ -->
+  <h2>Model definition</h2>
+  <p>The cost per transaction <span class="math-inline"><em>c</em><sub><em>r</em></sub></span> for region <span class="math-inline"><em>r</em></span> is the ratio of allocated cost to settled volume, adjusted for the seasonal factor <span class="math-inline"><em>&#947;</em></span>.</p>
+
+  <div class="math-display">
+    <div class="math-body">
+      <em>c</em><sub><em>r</em></sub> &#8201;=&#8201;
+      <span class="frac"><span class="num-part">&#8721;<sub><em>i</em>&#8712;<em>I</em><sub><em>r</em></sub></sub> <em>w</em><sub><em>i</em></sub> <em>x</em><sub><em>i</em></sub></span><span class="den-part"><em>n</em><sub><em>r</em></sub> (1 &#8722; <em>&#947;</em><sub><em>r</em></sub>)</span></span>
+    </div>
+    <div class="math-number">(1)</div>
+  </div>
+
+  <p>The confidence interval for the group mean uses the standard error of the weighted estimator.</p>
+
+  <div class="math-display">
+    <div class="math-body">
+      <em>SE</em>(<em>c&#772;</em>) &#8201;=&#8201; &#8730;<span class="radicand"><span class="frac"><span class="num-part">1</span><span class="den-part"><em>N</em>(<em>N</em>&#8722;1)</span></span> &#8721;<sub><em>r</em>=1</sub><sup><em>N</em></sup> (<em>c</em><sub><em>r</em></sub> &#8722; <em>c&#772;</em>)<sup>2</sup></span>
+    </div>
+    <div class="math-number">(2)</div>
+  </div>
+
+  <!-- ============ CODE ============ -->
+  <h2>Reproduction of the calculation</h2>
+  <p>The extract is produced with the query below. Run it with the <code>--reconcile</code> flag to include the manual adjustments.</p>
+
+  <pre><code><span class="c-kw">SELECT</span> region,
+       <span class="c-fn">SUM</span>(weighted_cost) / <span class="c-fn">NULLIF</span>(<span class="c-fn">SUM</span>(settled_volume), <span class="c-num">0</span>) <span class="c-kw">AS</span> cost_per_txn
+  <span class="c-kw">FROM</span> ledger.settlement_fact
+ <span class="c-kw">WHERE</span> period <span class="c-kw">BETWEEN</span> <span class="c-str">'2025-09-01'</span> <span class="c-kw">AND</span> <span class="c-str">'2026-08-31'</span>
+   <span class="c-kw">AND</span> amount &gt;= <span class="c-num">25000</span>   <span class="c-cm">-- materiality threshold</span>
+ <span class="c-kw">GROUP BY</span> region
+ <span class="c-kw">ORDER BY</span> cost_per_txn <span class="c-kw">DESC</span>;</code></pre>
+
+  <p>A verbatim path is written as <code>/srv/reports/gor-2026/extract.csv</code> and a keyboard action as <kbd>Ctrl</kbd> + <kbd>S</kbd>.</p>
+
+  <!-- ============ FOOTNOTES ============ -->
+  <hr class="fn-rule">
+  <section class="footnotes">
+    <ol>
+      <li id="fn1">The Southern region ledger reconciliation was 94 per cent complete at the reporting date. The residual difference is 1.2 million. <a href="#fnref1" class="fn-back">&#8617;</a></li>
+      <li id="fn2">Seasonal factors are taken from the five-year average and are recalculated each January.</li>
+    </ol>
+  </section>
+
+  <div class="running-foot"><span>GOR-2026-014 · Version 3.1</span><span>Confidential</span><span>Page 3 of 48</span></div>
+
+</div>

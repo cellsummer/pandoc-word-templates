@@ -1,0 +1,9 @@
+# Rendered proofs and conversion output. Rebuild with build_reference.py and pandoc.
+test/*.pdf
+test/*.docx
+test/*-[0-9].png
+
+# Pandoc's own default reference, fetched on demand by the build script.
+build/
+
+.DS_Store

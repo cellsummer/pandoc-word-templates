@@ -1,0 +1,428 @@
+<meta charset="utf-8"><title>Style C — Foundry</title>
+<style>
+/* ---- preview frame: simulates an A4 page, not part of the Word style ---- */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: #6d7076; }
+body { margin: 0; padding: 32px 16px 64px; }
+.page {
+  width: 21cm; min-height: 29.7cm; margin: 0 auto; background: #fff;
+  padding: 2.2cm 2.1cm 2cm; box-shadow: 0 10px 40px rgba(0,0,0,.35);
+}
+@media (max-width: 880px) { .page { width: 100%; padding: 24px; } }
+
+.running-head, .running-foot {
+  display: flex; justify-content: space-between; gap: 1em;
+  font-size: 8.5pt; letter-spacing: .04em;
+}
+.running-foot { justify-content: space-between; }
+
+hr.pagebreak {
+  border: 0; border-top: 1px dashed #b9bcc2; margin: 2.4em 0; position: relative;
+}
+hr.pagebreak::after {
+  content: attr(data-label); position: absolute; top: -.72em; left: 50%; transform: translateX(-50%);
+  background: #fff; padding: 0 .8em; font: 400 7.5pt/1 "Segoe UI", Arial, sans-serif;
+  color: #9aa0a6; letter-spacing: .12em; text-transform: uppercase;
+}
+
+/* ---- charts ---- */
+figure svg { width: 100%; height: auto; display: block; }
+svg .axis { stroke-width: 1; }
+svg .gridlines line { stroke-width: 1; }
+svg text { font-size: 11px; }
+svg .ticks text, svg .bar-values text { text-anchor: middle; }
+svg .ticks text { text-anchor: end; }
+svg .bar-labels text { text-anchor: middle; }
+
+.photo-frame {
+  display: flex; align-items: center; justify-content: center; height: 4.6cm;
+  font-size: 9pt; letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* ---- math layout ---- */
+.math-display { display: flex; align-items: center; gap: 1em; }
+.math-body { flex: 1; text-align: center; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 .25em; }
+.frac .num-part { padding: 0 .35em .12em; }
+.frac .den-part { padding: .12em .35em 0; border-top: 1px solid currentColor; }
+.radicand { border-top: 1px solid currentColor; padding: .15em .25em 0; margin-left: -.15em; }
+
+/* ---- tables ---- */
+table { width: 100%; border-collapse: collapse; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---- toc ---- */
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc li { display: flex; align-items: baseline; gap: .6em; }
+.toc li > span:first-child { flex: 0 1 auto; }
+.toc li::after { content: ""; flex: 1 1 auto; border-bottom: 1px dotted #b9bcc2; transform: translateY(-.25em); order: 1; }
+.toc .toc-page { order: 2; font-variant-numeric: tabular-nums; }
+.toc-2 { padding-left: 1.2em; }
+.toc-3 { padding-left: 2.4em; }
+
+kbd { font: inherit; }
+.footnotes ol { padding-left: 1.4em; }
+/* ================= THEME C — "Foundry" : dense technical / regulatory ================= */
+:root {
+  --ink: #16191d; --muted: #565c63; --accent: #21456e; --amber: #a35a00;
+  --rule: #b4bac1; --hair: #d9dde1; --band: #eef1f4;
+  --sans: "Segoe UI", Aptos, Calibri, Arial, sans-serif; --mono: Consolas, "Courier New", monospace;
+}
+body { font-family: var(--sans); font-size: 10pt; line-height: 1.34; color: var(--ink); }
+p { margin: 0 0 .5em; }
+
+.running-head { font-family: var(--mono); font-size: 8pt; color: var(--muted); text-transform: uppercase;
+  border-bottom: 2px solid var(--accent); padding-bottom: .4em; margin-bottom: 1.6em; }
+.running-foot { font-family: var(--mono); font-size: 8pt; color: var(--muted);
+  border-top: 2px solid var(--accent); padding-top: .4em; margin-top: 2em; }
+
+/* title block */
+.titleblock { background: var(--band); border-left: 6px solid var(--accent); padding: 1.2em 1.4em; margin-bottom: 1.8em; }
+.doc-kicker { font-family: var(--mono); font-size: 8.5pt; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--amber); margin: 0 0 .7em; }
+h1.title { font-size: 20pt; line-height: 1.16; font-weight: 700; color: var(--accent); margin: 0 0 .3em; }
+.subtitle { font-size: 11pt; color: var(--muted); margin: 0 0 1em; }
+.meta { display: grid; grid-template-columns: auto auto; gap: .4em 1.4em;
+  border-top: 1px solid var(--rule); padding-top: .7em; }
+.meta p { margin: 0; font-family: var(--mono); font-size: 8.5pt; color: var(--muted); }
+.meta .author { color: var(--ink); font-weight: 700; }
+.meta .docref { grid-column: 1 / -1; }
+
+/* toc */
+.toc { border: 1px solid var(--rule); padding: .9em 1.1em; margin-bottom: 1.8em; }
+.toc-title { font-size: 9pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 .7em; }
+.toc li { margin-bottom: .2em; font-size: 9.5pt; }
+.toc-1 { font-weight: 700; }
+.toc-2, .toc-3 { color: var(--muted); }
+.toc .toc-page { font-family: var(--mono); font-size: 8.5pt; }
+
+/* headings — hanging decimal numbers */
+.page { counter-reset: h1; }
+h1:not(.title) { counter-reset: h2; counter-increment: h1; }
+h2 { counter-reset: h3; counter-increment: h2; }
+h3 { counter-reset: h4; counter-increment: h3; }
+h4 { counter-reset: h5; counter-increment: h4; }
+h5 { counter-increment: h5; }
+h1:not(.title), h2, h3, h4, h5 { padding-left: 3.4em; text-indent: -3.4em; }
+h1:not(.title)::before { content: counter(h1) "\00a0\00a0"; }
+h2::before { content: counter(h1) "." counter(h2) "\00a0\00a0"; }
+h3::before { content: counter(h1) "." counter(h2) "." counter(h3) "\00a0\00a0"; }
+h4::before { content: counter(h1) "." counter(h2) "." counter(h3) "." counter(h4) "\00a0\00a0"; }
+h5::before { content: counter(h1) "." counter(h2) "." counter(h3) "." counter(h4) "." counter(h5) "\00a0\00a0"; }
+
+h1:not(.title) { font-size: 14pt; font-weight: 700; color: #fff; background: var(--accent);
+  padding: .3em .5em .3em 3.4em; text-indent: -2.9em; margin: 1.8em 0 .7em; }
+h2 { font-size: 12pt; font-weight: 700; color: var(--accent); margin: 1.4em 0 .4em;
+  border-bottom: 1px solid var(--hair); padding-bottom: .22em; }
+h3 { font-size: 10.5pt; font-weight: 700; color: var(--ink); margin: 1.1em 0 .3em; }
+h4 { font-size: 10pt; font-weight: 700; color: var(--muted); margin: .9em 0 .25em; }
+h5 { font-size: 9.5pt; font-weight: 700; font-style: italic; color: var(--muted); margin: .8em 0 .2em; }
+h6 { font-size: 9.5pt; font-weight: 400; font-style: italic; color: var(--muted); margin: .7em 0 .2em; padding-left: 3.4em; }
+
+.first-paragraph { font-weight: 600; }
+.lead { border: 1px solid var(--amber); border-left: 4px solid var(--amber); background: #fdf6ee;
+  padding: .55em .8em; margin: .9em 0; font-weight: 600; }
+
+/* lists */
+ul, ol { margin: .4em 0 .7em; padding-left: 1.5em; }
+li { margin-bottom: .15em; }
+ul ul, ol ol { margin: .15em 0; }
+ul { list-style: none; padding-left: 1.2em; }
+.toc ul { padding-left: 0; }
+.page ul:not(.toc ul):not(.footnotes ul) li::before { content: "\25AA"; color: var(--accent); display: inline-block; width: 1em; margin-left: -1em; }
+ul ul li::before { content: "\2013" !important; }
+ol li::marker { font-weight: 700; color: var(--accent); }
+dl { margin: .6em 0 .8em; border-top: 1px solid var(--hair); }
+dt { font-weight: 700; color: var(--accent); margin-top: .45em; }
+dd { margin: 0 0 .35em 1.6em; padding-bottom: .35em; border-bottom: 1px solid var(--hair); }
+
+/* quote + callouts */
+blockquote { margin: .9em 0; padding: .6em .9em; background: var(--band); border-left: 4px solid var(--rule);
+  font-size: 9.5pt; font-style: italic; }
+blockquote .attribution { font-style: normal; font-family: var(--mono); font-size: 8pt; color: var(--muted); margin-bottom: 0; }
+.callout { border: 1px solid var(--accent); margin: .9em 0; }
+.callout-title { font-size: 8.5pt; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--accent); color: #fff; margin: 0; padding: .28em .8em; }
+.callout p:not(.callout-title) { padding: .55em .8em; margin: 0; font-size: 9.5pt; }
+.callout-warning { border-color: var(--amber); }
+.callout-warning .callout-title { background: var(--amber); }
+
+/* table — full grid */
+table { margin: .7em 0 .3em; font-size: 9pt; border: 1px solid var(--rule); }
+caption { caption-side: top; text-align: left; font-size: 8.5pt; font-weight: 700;
+  color: var(--ink); padding-bottom: .4em; }
+thead th { background: var(--accent); color: #fff; padding: .35em .5em; text-align: left;
+  border: 1px solid var(--accent); font-size: 8.5pt; }
+tbody td, tbody th { padding: .3em .5em; border: 1px solid var(--hair); }
+tbody tr:nth-child(odd) { background: #f7f9fa; }
+tbody th { text-align: left; font-weight: 700; background: var(--band); }
+tfoot th, tfoot td { padding: .35em .5em; border: 1px solid var(--rule); background: var(--band); font-weight: 700; }
+.pos { color: #15683f; } .neg { color: #9b2c0e; }
+.table-note { font-size: 8pt; color: var(--muted); font-family: var(--mono); }
+
+/* figures */
+figure { margin: 1.1em 0; border: 1px solid var(--hair); padding: .8em; }
+figcaption { font-size: 8.5pt; font-weight: 700; color: var(--muted); margin-top: .5em; }
+svg .axis { stroke: var(--ink); } svg .gridlines line { stroke: var(--hair); }
+svg .bars rect { fill: var(--accent); }
+svg .bars rect:nth-child(3) { fill: var(--amber); }
+svg .ticks text, svg .bar-labels text { fill: var(--muted); }
+svg .bar-values text { fill: var(--ink); font-weight: 700; }
+.photo-frame { background: var(--band); border: 1px solid var(--hair); color: var(--muted); }
+
+/* math */
+.math-inline { font-family: "Cambria Math", Cambria, serif; font-size: 10.5pt; }
+.math-display { font-family: "Cambria Math", Cambria, serif; font-size: 12pt; margin: 1em 0;
+  border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); padding: .7em 0; }
+.math-number { font-family: var(--mono); font-size: 9pt; color: var(--muted); }
+
+/* code */
+pre { background: #1e2430; padding: .8em 1em; overflow-x: auto; margin: .8em 0; }
+pre code { font-family: var(--mono); font-size: 8.5pt; line-height: 1.45; color: #d6dbe3; }
+code { font-family: var(--mono); font-size: 9pt; background: var(--band); border: 1px solid var(--hair); padding: 0 .25em; }
+pre code { background: none; border: 0; padding: 0; }
+.c-kw { color: #7fb2ff; font-weight: 700; } .c-str { color: #9ede9b; }
+.c-num { color: #ffb86b; } .c-cm { color: #7d8794; font-style: italic; } .c-fn { color: #e0a3ff; }
+kbd { font-family: var(--mono); font-size: 8.5pt; border: 1px solid var(--rule); padding: 0 .3em; background: var(--band); }
+
+/* footnotes */
+.fn-rule { border: 0; border-top: 1px solid var(--rule); margin: 1.8em 0 .6em; }
+.footnotes { font-size: 8pt; line-height: 1.35; color: var(--muted); }
+.footnotes li { margin-bottom: .25em; }
+.fnref { font-size: 7pt; vertical-align: super; color: var(--accent); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
+/* ---- preview switcher (not part of the Word style) ---- */
+.styleswitch { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center;
+  gap: .4rem; padding: .6rem 1rem; margin: -32px -16px 24px; background: #2b2e33;
+  font: 600 12px/1 "Segoe UI", system-ui, sans-serif; }
+.styleswitch .sw-name { color: #9aa0a6; font-weight: 400; margin-right: auto; letter-spacing: .08em;
+  text-transform: uppercase; }
+.styleswitch a { color: #d8dade; text-decoration: none; padding: .45rem .7rem; border-radius: 3px;
+  background: #3a3e45; }
+.styleswitch a:hover { background: #4a4f57; }
+.styleswitch a.current { background: #fff; color: #16181c; }
+</style>
+<nav class="styleswitch"><span class="sw-name">Dense technical</span><a href="chancery.html" data-slug="chancery">A — Chancery</a><a href="meridian.html" data-slug="meridian">B — Meridian</a><a href="foundry.html" data-slug="foundry">C — Foundry</a><a href="atlas.html" data-slug="atlas">D — Atlas</a><a href="blueprint.html" data-slug="blueprint">E — Blueprint</a><a href="manifesto.html" data-slug="manifesto">F — Manifesto</a><a href="ledger.html" data-slug="ledger">G — Ledger</a><a href="nocturne.html" data-slug="nocturne">H — Nocturne</a></nav>
+<div class="page">
+
+  <div class="running-head"><span class="rh-left">Global Operations Review</span><span class="rh-right">Confidential — Internal Use Only</span></div>
+
+  <!-- ============ TITLE BLOCK ============ -->
+  <section class="titleblock">
+    <p class="doc-kicker">Annual Report</p>
+    <h1 class="title">Operational Resilience and Capital Efficiency</h1>
+    <p class="subtitle">Consolidated findings for fiscal year 2026 across the four operating regions</p>
+    <div class="meta">
+      <p class="author">Prepared by Strategy &amp; Analytics</p>
+      <p class="date">21 September 2026</p>
+      <p class="docref">Document reference: GOR-2026-014 · Version 3.1</p>
+    </div>
+  </section>
+
+  <!-- ============ TABLE OF CONTENTS ============ -->
+  <nav class="toc">
+    <p class="toc-title">Contents</p>
+    <ul>
+      <li class="toc-1"><span>Executive summary</span><span class="toc-page">3</span></li>
+      <li class="toc-1"><span>Method and scope</span><span class="toc-page">5</span></li>
+      <li class="toc-2"><span>Data sources</span><span class="toc-page">6</span></li>
+      <li class="toc-2"><span>Limitations</span><span class="toc-page">8</span></li>
+      <li class="toc-1"><span>Regional performance</span><span class="toc-page">11</span></li>
+      <li class="toc-3"><span>Cost per transaction</span><span class="toc-page">14</span></li>
+    </ul>
+  </nav>
+
+  <hr class="pagebreak" data-label="Page break">
+
+  <!-- ============ HEADINGS + BODY ============ -->
+  <h1>Executive summary</h1>
+
+  <p class="first-paragraph">The group completed the year with a stable cost base and an improved capital position. Throughput increased in three of the four regions, while the cost per transaction decreased by 6.4 per cent. The remainder of this report gives the evidence for these results and the actions proposed for the next period.</p>
+
+  <p>Two conditions limit the conclusions. First, the reconciliation of the Southern region ledger was not complete at the reporting date. Second, the new settlement platform was live for only seven months, so the annualised figures are estimates. Both conditions are described in <a href="#scope">Method and scope</a>.</p>
+
+  <p class="lead">Recommendation: approve the second phase of the platform migration and release the contingency reserve of 12.4 million.</p>
+
+  <h2 id="scope">Method and scope</h2>
+  <p>The analysis covers all entities consolidated at 31 August 2026. Transactions below the materiality threshold of 25,000 were excluded, except where they formed part of a recurring series.</p>
+
+  <h3>Data sources</h3>
+  <p>Three systems supplied the primary records. Where the systems disagreed, the general ledger was used as the reference. Manual adjustments are listed in Appendix B and are identified with the marker <code>ADJ-</code> followed by the sequence number.</p>
+
+  <h4>Reconciliation procedure</h4>
+  <p>Each regional controller confirmed the closing balance in writing. The confirmation was matched against the automated extract before the figures entered this report.</p>
+
+  <h5>Exception handling</h5>
+  <p>An exception was raised when the difference was more than 0.5 per cent of the regional total. Fourteen exceptions were raised, and twelve were closed before the reporting date.</p>
+
+  <h6>Residual items</h6>
+  <p>The two open items relate to a currency translation in the Southern region and to an unposted supplier credit. Neither item is material on its own.</p>
+
+  <!-- ============ LISTS ============ -->
+  <h2>Findings</h2>
+  <p>The review produced four findings. They are given in order of financial effect.</p>
+
+  <ul>
+    <li>Settlement cycles decreased from four days to one day in the regions that use the new platform.
+      <ul>
+        <li>Northern region: full migration completed in March.</li>
+        <li>Eastern region: partial migration, two legacy queues remain.</li>
+      </ul>
+    </li>
+    <li>Manual intervention rates stay above target in high-value corridors.</li>
+    <li>Vendor concentration increased. One supplier now provides 38 per cent of processing capacity.</li>
+    <li>Recovery time for the primary ledger is 47 minutes against a target of 30 minutes.</li>
+  </ul>
+
+  <p>The proposed actions follow the same order.</p>
+
+  <ol>
+    <li>Complete the Eastern region migration before the end of the first quarter.
+      <ol>
+        <li>Decommission the legacy queues.</li>
+        <li>Transfer the reconciliation rules to the new engine.</li>
+      </ol>
+    </li>
+    <li>Introduce a second processing supplier for corridors above 50 million per month.</li>
+    <li>Rehearse the ledger recovery procedure each quarter and record the measured time.</li>
+  </ol>
+
+  <dl>
+    <dt>Cost per transaction</dt>
+    <dd>Total processing cost divided by the number of settled transactions in the period.</dd>
+    <dt>Manual intervention rate</dt>
+    <dd>The share of transactions that need an operator action before settlement.</dd>
+    <dt>Recovery time objective</dt>
+    <dd>The maximum time permitted between the loss of a service and its return to operation.</dd>
+  </dl>
+
+  <!-- ============ QUOTE + CALLOUT ============ -->
+  <blockquote>
+    <p>The control environment is adequate for the current volume. It will not be adequate at twice the current volume without further automation.</p>
+    <p class="attribution">— Internal Audit, interim opinion, July 2026</p>
+  </blockquote>
+
+  <div class="callout callout-note">
+    <p class="callout-title">Note</p>
+    <p>The figures in this section are unaudited. The audited figures will be released with the statutory accounts in November.</p>
+  </div>
+
+  <div class="callout callout-warning">
+    <p class="callout-title">Caution</p>
+    <p>Vendor concentration above 35 per cent breaches the group risk appetite statement and needs board acknowledgement.</p>
+  </div>
+
+  <!-- ============ TABLE ============ -->
+  <h2>Regional performance</h2>
+  <p>Table 1 gives the principal measures for each region. Amounts are in millions of euro unless stated otherwise.</p>
+
+  <table>
+    <caption>Table 1 — Principal measures by region, fiscal year 2026</caption>
+    <thead>
+      <tr>
+        <th scope="col">Region</th>
+        <th scope="col" class="num">Volume (m)</th>
+        <th scope="col" class="num">Revenue</th>
+        <th scope="col" class="num">Cost per txn</th>
+        <th scope="col" class="num">Change</th>
+        <th scope="col">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><th scope="row">Northern</th><td class="num">412.8</td><td class="num">1,204.5</td><td class="num">0.284</td><td class="num pos">−8.1%</td><td>Complete</td></tr>
+      <tr><th scope="row">Eastern</th><td class="num">318.2</td><td class="num">987.1</td><td class="num">0.311</td><td class="num pos">−5.2%</td><td>In progress</td></tr>
+      <tr><th scope="row">Southern</th><td class="num">204.6</td><td class="num">612.4</td><td class="num">0.377</td><td class="num neg">+1.9%</td><td>Under review</td></tr>
+      <tr><th scope="row">Western</th><td class="num">289.9</td><td class="num">845.0</td><td class="num">0.298</td><td class="num pos">−6.8%</td><td>Complete</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><th scope="row">Group</th><td class="num">1,225.5</td><td class="num">3,649.0</td><td class="num">0.312</td><td class="num pos">−6.4%</td><td>—</td></tr>
+    </tfoot>
+  </table>
+
+  <p class="table-note">Source: consolidated ledger extract, 31 August 2026. Southern region figures are provisional.<a href="#fn1" class="fnref" id="fnref1">1</a></p>
+
+  <!-- ============ FIGURE / CHART ============ -->
+  <figure>
+    <svg viewBox="0 0 640 260" role="img" aria-label="Bar chart of cost per transaction by region">
+      <g class="chart">
+        <line class="axis" x1="70" y1="20" x2="70" y2="210"/>
+        <line class="axis" x1="70" y1="210" x2="610" y2="210"/>
+        <g class="gridlines">
+          <line x1="70" y1="163" x2="610" y2="163"/>
+          <line x1="70" y1="115" x2="610" y2="115"/>
+          <line x1="70" y1="67" x2="610" y2="67"/>
+        </g>
+        <g class="ticks">
+          <text x="60" y="214">0.0</text><text x="60" y="167">0.1</text><text x="60" y="119">0.2</text><text x="60" y="71">0.3</text>
+        </g>
+        <g class="bars">
+          <rect x="110" y="74" width="78" height="136"/>
+          <rect x="240" y="61" width="78" height="149"/>
+          <rect x="370" y="29" width="78" height="181"/>
+          <rect x="500" y="67" width="78" height="143"/>
+        </g>
+        <g class="bar-labels">
+          <text x="149" y="230">Northern</text><text x="279" y="230">Eastern</text><text x="409" y="230">Southern</text><text x="539" y="230">Western</text>
+        </g>
+        <g class="bar-values">
+          <text x="149" y="66">0.284</text><text x="279" y="53">0.311</text><text x="409" y="21">0.377</text><text x="539" y="59">0.298</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Figure 1 — Cost per transaction by region, euro per settled transaction</figcaption>
+  </figure>
+
+  <figure class="photo">
+    <div class="photo-frame">Photograph or screenshot placeholder</div>
+    <figcaption>Figure 2 — Settlement operations centre, Northern region</figcaption>
+  </figure>
+
+  <!-- ============ MATH ============ -->
+  <h2>Model definition</h2>
+  <p>The cost per transaction <span class="math-inline"><em>c</em><sub><em>r</em></sub></span> for region <span class="math-inline"><em>r</em></span> is the ratio of allocated cost to settled volume, adjusted for the seasonal factor <span class="math-inline"><em>&#947;</em></span>.</p>
+
+  <div class="math-display">
+    <div class="math-body">
+      <em>c</em><sub><em>r</em></sub> &#8201;=&#8201;
+      <span class="frac"><span class="num-part">&#8721;<sub><em>i</em>&#8712;<em>I</em><sub><em>r</em></sub></sub> <em>w</em><sub><em>i</em></sub> <em>x</em><sub><em>i</em></sub></span><span class="den-part"><em>n</em><sub><em>r</em></sub> (1 &#8722; <em>&#947;</em><sub><em>r</em></sub>)</span></span>
+    </div>
+    <div class="math-number">(1)</div>
+  </div>
+
+  <p>The confidence interval for the group mean uses the standard error of the weighted estimator.</p>
+
+  <div class="math-display">
+    <div class="math-body">
+      <em>SE</em>(<em>c&#772;</em>) &#8201;=&#8201; &#8730;<span class="radicand"><span class="frac"><span class="num-part">1</span><span class="den-part"><em>N</em>(<em>N</em>&#8722;1)</span></span> &#8721;<sub><em>r</em>=1</sub><sup><em>N</em></sup> (<em>c</em><sub><em>r</em></sub> &#8722; <em>c&#772;</em>)<sup>2</sup></span>
+    </div>
+    <div class="math-number">(2)</div>
+  </div>
+
+  <!-- ============ CODE ============ -->
+  <h2>Reproduction of the calculation</h2>
+  <p>The extract is produced with the query below. Run it with the <code>--reconcile</code> flag to include the manual adjustments.</p>
+
+  <pre><code><span class="c-kw">SELECT</span> region,
+       <span class="c-fn">SUM</span>(weighted_cost) / <span class="c-fn">NULLIF</span>(<span class="c-fn">SUM</span>(settled_volume), <span class="c-num">0</span>) <span class="c-kw">AS</span> cost_per_txn
+  <span class="c-kw">FROM</span> ledger.settlement_fact
+ <span class="c-kw">WHERE</span> period <span class="c-kw">BETWEEN</span> <span class="c-str">'2025-09-01'</span> <span class="c-kw">AND</span> <span class="c-str">'2026-08-31'</span>
+   <span class="c-kw">AND</span> amount &gt;= <span class="c-num">25000</span>   <span class="c-cm">-- materiality threshold</span>
+ <span class="c-kw">GROUP BY</span> region
+ <span class="c-kw">ORDER BY</span> cost_per_txn <span class="c-kw">DESC</span>;</code></pre>
+
+  <p>A verbatim path is written as <code>/srv/reports/gor-2026/extract.csv</code> and a keyboard action as <kbd>Ctrl</kbd> + <kbd>S</kbd>.</p>
+
+  <!-- ============ FOOTNOTES ============ -->
+  <hr class="fn-rule">
+  <section class="footnotes">
+    <ol>
+      <li id="fn1">The Southern region ledger reconciliation was 94 per cent complete at the reporting date. The residual difference is 1.2 million. <a href="#fnref1" class="fn-back">&#8617;</a></li>
+      <li id="fn2">Seasonal factors are taken from the five-year average and are recalculated each January.</li>
+    </ol>
+  </section>
+
+  <div class="running-foot"><span>GOR-2026-014 · Version 3.1</span><span>Confidential</span><span>Page 3 of 48</span></div>
+
+</div>
+<script>document.querySelector('.styleswitch a[data-slug="foundry"]').classList.add('current');</script>
