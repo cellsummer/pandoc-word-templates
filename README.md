@@ -85,8 +85,42 @@ Every style below is one pandoc writes by itself. Nothing needs markup in the ma
 | running head and foot | header, footer |
 | `$math$`, `$$math$$` | native OMML, Cambria Math |
 
-In A and C, heading numbers come from a multilevel list (`numId 42`) bound to Heading
-1–5, the same mechanism Word's own numbered headings use. B and D have no numbering.
+Code blocks use a light panel in all four templates, with an accent rule down the left
+edge. Keyword colour follows each theme's accent; inline code shares the panel colour.
+
+See *Heading numbers* below for how A and C number their headings. B and D do not
+number.
+
+## Heading numbers
+
+A and C number headings from a multilevel list bound to Heading 1–5. Word keeps
+style-linked numbering only when the file is written the way Word itself writes it, so
+the definition is a matched set:
+
+- a numbering style, `Heading Numbers`, that owns the list;
+- the list definition that declares it (`w:styleLink`), carrying the levels and their
+  `w:pStyle` links, with `w:nsid` and `w:tmpl` present;
+- a second definition that points back at the style (`w:numStyleLink`), which is what
+  the heading styles reference.
+
+Written any looser — the levels alone, with numbering set directly on the heading styles
+— Word discards the numbering the first time the template is opened and saved, and every
+report made afterwards comes out unnumbered.
+
+If your Word build still strips it, there is a route that cannot be stripped, because
+the numbers become ordinary text rather than a list:
+
+    pandoc report.md --reference-doc=templates/chancery-reference.docx --number-sections -o report.docx
+
+Pandoc then writes each number as a run in the `Section Number` character style,
+followed by a tab. That style carries no formatting of its own, so numbers inherit the
+heading they sit in, and every numbered heading style has a tab stop at the matching
+indent.
+
+Use one route or the other, never both: with style numbering still active,
+`--number-sections` produces headings that read `1 1 Executive summary`. To switch a
+template to the pandoc route, set `numbered=False` on its theme in
+`templates/build_reference.py` and rebuild.
 
 ## Four extra styles, applied from markdown
 
@@ -139,7 +173,12 @@ Each template converts `test/sample.md` without a single undefined style, and no
 its specimen body, footnote or figure into the output. All four were rendered to PDF
 with LibreOffice and read page by page.
 
+The numbering fix was checked as far as this machine allows: the XML now matches Word's
+linked-style form, and an open-and-save round trip through LibreOffice keeps numbering on
+the heading styles. LibreOffice is not Word, so the real test is opening a template in
+Word, saving, and converting again.
+
 Two limits on that check. The files have not been opened in Word itself — confirm the
-header, foot and TOC field there. And Aptos, Calibri and Consolas are not installed on
+header, foot, heading numbers and TOC field there. And Aptos, Calibri and Consolas are not installed on
 the machine that produced the proofs, so LibreOffice substituted metric-compatible
 faces: the layout and colour in the PDFs are right, the letterforms are not.

@@ -19,17 +19,15 @@ W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
 R = 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
 M = 'xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"'
 
-# Syntax colours. A light code panel and a dark one need different palettes.
-DARK_TOKENS = {
-    "keyword": ("7FB2FF", True), "type": ("7FD8C0", False), "number": ("FFB86B", False),
-    "string": ("9EDE9B", False), "comment": ("7D8794", False), "function": ("E0A3FF", False),
-    "plain": ("D6DBE3", False), "alert": ("FF8A6B", True),
-}
-LIGHT_TOKENS = {
-    "keyword": ("0B4A7A", True), "type": ("0F6F6C", False), "number": ("8C2D18", False),
-    "string": ("1D6F42", False), "comment": ("8A8F98", False), "function": ("6A3D9A", False),
-    "plain": ("24292F", False), "alert": ("B3261E", True),
-}
+def code_palette(t):
+    """Syntax colours for a light code panel. The keyword colour follows the theme."""
+    return {
+        "keyword": (t.accent_dark, True), "type": ("0F6F6C", False),
+        "number": ("8C2D18", False), "string": ("1D6F42", False),
+        "comment": ("8A8F98", False), "function": ("6A3D9A", False),
+        "plain": (t.code_fg, False), "alert": ("B3261E", True),
+    }
+
 
 @dataclass
 class Head:
@@ -71,7 +69,6 @@ class Theme:
     number_hang: bool               # hanging indent under the heading number
     title_kind: str                 # band | rule | open | reverse
     table_kind: str                 # grid | hairline | open | dark
-    code_dark: bool
     code_bg: str
     code_fg: str
     meta_mono: bool                 # author, date and the running foot in the mono face
@@ -83,10 +80,6 @@ class Theme:
     @property
     def text_w(self):
         return PAGE_W - 2 * self.margin_x
-
-    @property
-    def tokens(self):
-        return DARK_TOKENS if self.code_dark else LIGHT_TOKENS
 
 # ---------------------------------------------------------------- xml helpers
 def font(name, size=None, color=None, bold=False, italic=False,
@@ -202,13 +195,15 @@ def heading_styles(t):
         if h.shade:
             bdr += pad(h.shade)
         numbered = t.numbered and i <= 5
-        hang = int((0.7 + 0.35 * i) * CM) if (numbered and t.number_hang) else None
+        stop = int((0.7 + 0.35 * i) * CM)
+        hang = stop if (numbered and t.number_hang) else None
+        tabs = f'<w:tab w:val="left" w:pos="{stop}"/>' if i <= 5 else ""
         s.append(style(f"Heading{i}", f"heading {i}", nxt="BodyText",
                        link=f"Heading{i}Char",
                        ppr=para(before=h.before, after=h.after, keep_next=True,
                                 keep_lines=True, shade=h.shade or None, borders=bdr,
-                                numid=42 if numbered else None, ilvl=i - 1,
-                                ind=hang, hanging=hang),
+                                numid=HEADING_NUM if numbered else None, ilvl=i - 1,
+                                ind=hang, hanging=hang, tabs=tabs),
                        rpr=font(t.display if i == 1 else t.sans, h.size, h.color,
                                 bold=h.bold, italic=h.italic, caps=h.caps)))
         s.append(style(f"Heading{i}Char", f"Heading {i} Char", kind="character",
@@ -328,8 +323,7 @@ def styles_xml(t):
     add(style("CaptionedFigure", "Captioned Figure", based="BodyText", nxt="BodyText",
               ppr=para(before=140, after=200, keep_next=True, jc=None)))
 
-    code_border = pad(t.code_bg) if t.code_dark else \
-        border("left", t.accent, sz=18, space=8) + pad(t.code_bg, x=8, y=6)
+    code_border = border("left", t.accent, sz=18, space=8) + pad(t.code_bg, x=8, y=6)
     add(style("SourceCode", "Source Code", nxt="BodyText", custom=True,
               ppr='<w:wordWrap w:val="off"/>' +
                   para(before=0, after=0, line=240, shade=t.code_bg,
@@ -337,8 +331,8 @@ def styles_xml(t):
               rpr=font(t.mono, t.body_size - 3, t.code_fg)))
     add(style("VerbatimChar", "Verbatim Char", kind="character",
               based="DefaultParagraphFont", custom=True,
-              rpr=font(t.mono, t.body_size - 2, t.ink, shade=t.band)))
-    palette = t.tokens
+              rpr=font(t.mono, t.body_size - 2, t.ink, shade=t.code_bg)))
+    palette = code_palette(t)
     groups = [
         ("keyword", ["KeywordTok", "ControlFlowTok", "ImportTok"]),
         ("type", ["DataTypeTok"]),
@@ -367,7 +361,7 @@ def styles_xml(t):
     add(style("Hyperlink", "Hyperlink", kind="character", based="DefaultParagraphFont",
               quick=False, rpr=font(t.sans, None, t.accent) + '<w:u w:val="single"/>'))
     add(style("SectionNumber", "Section Number", kind="character",
-              based="DefaultParagraphFont", quick=False, rpr=font(t.sans, None, t.muted)))
+              based="DefaultParagraphFont", quick=False))
     add(style("Bibliography", "Bibliography", based="BodyText",
               ppr=para(after=100, ind=int(0.7 * CM), hanging=int(0.7 * CM))))
 
@@ -408,29 +402,53 @@ def styles_xml(t):
               ppr=para(before=0, after=160, jc=None),
               rpr=font(t.mono if t.meta_mono else t.sans, t.body_size - 4, t.muted)))
 
+    if t.numbered:
+        add(numbering_style())
     add(table_style(t))
     return (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:styles {W} {R}>'
             + "".join(s) + "</w:styles>")
 
 # ---------------------------------------------------------------- numbering.xml
+# Word keeps style-linked numbering only when it is written the way Word writes it:
+# a numbering style, the list definition that declares it, and a second definition that
+# points back at it. Heading styles then reference the second one. Without this pair
+# Word drops the numbering from the heading styles the first time the file is saved.
+LIST_STYLE_ID = "HeadingNumbers"
+LIST_DEF_NUM = 42          # carries the levels, owned by the numbering style
+HEADING_NUM = 45           # what the heading styles reference
+
 def heading_numbering(t):
-    """Multilevel list bound to Heading 1-5, the way Word's numbered headings work."""
+    """Multilevel list bound to Heading 1-5, in Word's own linked-style form."""
     lv = []
     for i in range(5):
         fmt = ".".join(f"%{n + 1}" for n in range(i + 1))
         hang = int((0.7 + 0.35 * (i + 1)) * CM) if t.number_hang else 0
         suff = "tab" if (t.number_hang and i) else "space"
-        ind = (f'<w:pPr><w:ind w:left="{hang}" w:hanging="{hang}"/></w:pPr>'
-               if hang else "")
-        lv.append(f'<w:lvl w:ilvl="{i}"><w:start w:val="1"/><w:numFmt w:val="decimal"/>'
-                  f'<w:pStyle w:val="Heading{i + 1}"/><w:suff w:val="{suff}"/>'
-                  f'<w:lvlText w:val="{fmt}"/><w:lvlJc w:val="left"/>{ind}</w:lvl>')
+        ind = f'<w:pPr><w:ind w:left="{hang}" w:hanging="{hang}"/></w:pPr>' if hang else ""
+        lv.append(f'<w:lvl w:ilvl="{i}" w:tentative="0"><w:start w:val="1"/>'
+                  f'<w:numFmt w:val="decimal"/><w:pStyle w:val="Heading{i + 1}"/>'
+                  f'<w:suff w:val="{suff}"/><w:lvlText w:val="{fmt}"/>'
+                  f'<w:lvlJc w:val="left"/>{ind}</w:lvl>')
     for i in range(5, 9):
-        lv.append(f'<w:lvl w:ilvl="{i}"><w:numFmt w:val="none"/><w:lvlText w:val=""/>'
+        lv.append(f'<w:lvl w:ilvl="{i}" w:tentative="0"><w:start w:val="1"/>'
+                  '<w:numFmt w:val="none"/><w:lvlText w:val=""/>'
                   '<w:lvlJc w:val="left"/></w:lvl>')
-    return ('<w:abstractNum w:abstractNumId="42"><w:multiLevelType w:val="multilevel"/>'
-            + "".join(lv) + '</w:abstractNum><w:num w:numId="42">'
-            '<w:abstractNumId w:val="42"/></w:num>')
+    return (f'<w:abstractNum w:abstractNumId="{LIST_DEF_NUM}">'
+            '<w:nsid w:val="2A4B6C10"/><w:multiLevelType w:val="multilevel"/>'
+            f'<w:tmpl w:val="0409001D"/><w:styleLink w:val="{LIST_STYLE_ID}"/>'
+            + "".join(lv) + "</w:abstractNum>"
+            f'<w:abstractNum w:abstractNumId="{HEADING_NUM}">'
+            '<w:nsid w:val="2A4B6C11"/><w:multiLevelType w:val="multilevel"/>'
+            f'<w:tmpl w:val="0409001D"/><w:numStyleLink w:val="{LIST_STYLE_ID}"/>'
+            "</w:abstractNum>"
+            f'<w:num w:numId="{LIST_DEF_NUM}"><w:abstractNumId w:val="{LIST_DEF_NUM}"/></w:num>'
+            f'<w:num w:numId="{HEADING_NUM}"><w:abstractNumId w:val="{HEADING_NUM}"/></w:num>')
+
+def numbering_style():
+    """The numbering style the list definition belongs to. Word requires it to exist."""
+    return ('<w:style w:type="numbering" w:styleId="HeadingNumbers">'
+            '<w:name w:val="Heading Numbers"/><w:uiPriority w:val="99"/>'
+            f'<w:pPr><w:numPr><w:numId w:val="{LIST_DEF_NUM}"/></w:numPr></w:pPr></w:style>')
 
 def list_numbering():
     """Numbering for the specimen lists only. Converted reports use pandoc's own."""
@@ -783,7 +801,7 @@ THEMES = [
           band="EEF1F4", zebra="F7F9FA",
           body_size=20, body_line=240, body_after=100, justify=False,
           numbered=True, number_hang=True, title_kind="band", table_kind="grid",
-          code_dark=True, code_bg="1E2430", code_fg="D6DBE3", meta_mono=True,
+          code_bg="F4F6F8", code_fg="24292F", meta_mono=True,
           margin_x=int(2.2 * CM), margin_y=int(2.0 * CM), title_size=40,
           heads=[Head(28, "FFFFFF", shade="21456E", before=360, after=140),
                  Head(24, "21456E", bottom=4, bottom_color="D9DDE1"),
@@ -798,7 +816,7 @@ THEMES = [
           band="F7EDEF", zebra="FAF6F7",
           body_size=22, body_line=276, body_after=120, justify=True,
           numbered=True, number_hang=False, title_kind="rule", table_kind="hairline",
-          code_dark=False, code_bg="F6F7F9", code_fg="24292F", meta_mono=False,
+          code_bg="F8F5F5", code_fg="24292F", meta_mono=False,
           margin_x=int(2.5 * CM), margin_y=int(2.3 * CM), title_size=52,
           heads=[Head(36, "8C1D34", bold=False, bottom=12, before=480, after=180),
                  Head(28, "8C1D34", before=380, after=110),
@@ -814,7 +832,7 @@ THEMES = [
           band="F7EDEF", zebra="FBFAFA",
           body_size=22, body_line=312, body_after=200, justify=False,
           numbered=False, number_hang=False, title_kind="open", table_kind="open",
-          code_dark=False, code_bg="F8F7F7", code_fg="24292F", meta_mono=False,
+          code_bg="F8F5F5", code_fg="24292F", meta_mono=False,
           margin_x=int(2.8 * CM), margin_y=int(2.5 * CM), title_size=64,
           heads=[Head(44, "202226", bold=False, bottom=24, before=620, after=200),
                  Head(30, "202226", before=440, after=130),
@@ -830,7 +848,7 @@ THEMES = [
           band="F7EDEF", zebra="FAF6F7",
           body_size=22, body_line=292, body_after=140, justify=False,
           numbered=False, number_hang=False, title_kind="reverse", table_kind="dark",
-          code_dark=True, code_bg="2C2C30", code_fg="E8E6E3", meta_mono=False,
+          code_bg="F8F5F5", code_fg="24292F", meta_mono=False,
           margin_x=int(2.4 * CM), margin_y=int(2.2 * CM), title_size=60,
           heads=[Head(42, "2C2C30", top=24, before=560, after=180),
                  Head(29, "8C1D34", before=420, after=120),
