@@ -1,8 +1,8 @@
 # Word report templates
 
-Four pandoc reference documents, built from one script. Style C keeps its original slate
+Five pandoc reference documents, built from one script. Style C keeps its original slate
 blue and Calibri; styles A, B and D share a burgundy palette and the Aptos typeface, so
-what separates them is structure, not colour.
+what separates them is structure, not colour. C also ships in an unnumbered variant.
 
     pandoc report.md --reference-doc=templates/chancery-reference.docx --toc -o report.docx
 
@@ -16,7 +16,7 @@ Rebuild every template after a change:
 The script starts from `pandoc --print-default-data-file reference.docx`, so the style
 inventory always matches the installed pandoc (built and tested against pandoc 3.11).
 
-## The four
+## The templates
 
 | File | Style | Typeface | Accent | Headings | Tables | Density |
 |---|---|---|---|---|---|---|
@@ -24,6 +24,11 @@ inventory always matches the installed pandoc (built and tested against pandoc 3
 | `meridian-reference.docx` | B — modern and open | Aptos | Burgundy `8C1D34` | unnumbered, large and light | open, banded rows | low, much air |
 | `atlas-reference.docx` | D — bold editorial | Aptos | Burgundy `8C1D34` | unnumbered, heavy, accent rule above H1 | charcoal header band | medium |
 | `foundry-reference.docx` | C — dense technical | Calibri | Slate blue `21456E` | numbered 1.1.1, reversed H1 bar | full grid | high |
+| `foundry-plain-reference.docx` | C — dense technical, unnumbered | Calibri | Slate blue `21456E` | none; headings sit flush left | full grid | high |
+
+`foundry-plain` is the same template with heading numbering removed: identical styles,
+spacing and colour, headings flush to the margin. Use it when Word keeps discarding
+style numbering, or when you would rather number with `--number-sections`.
 
 Differences that carry the identity: A justifies its text, numbers its headings and
 keeps every rule hairline. B triples the white space, drops numbering and sets a 32 pt
@@ -33,7 +38,7 @@ across its tables.
 ## Preview
 
 The specimen report each template carries, rendered to PDF. Click any page for the full
-size image.
+size image. `foundry-plain` is not shown: it is the C pages below without the numbers.
 
 | A — Chancery | B — Meridian |
 |:---:|:---:|
@@ -147,9 +152,10 @@ heading they sit in, and every numbered heading style has a tab stop at the matc
 indent.
 
 Use one route or the other, never both: with style numbering still active,
-`--number-sections` produces headings that read `1 1 Executive summary`. To switch a
-template to the pandoc route, set `numbered=False` on its theme in
-`templates/build_reference.py` and rebuild.
+`--number-sections` produces headings that read `1 1 Executive summary`. For C, the
+`foundry-plain` template is the pandoc route already built. For any other, set
+`numbered=False` on its theme in `templates/build_reference.py` and rebuild — the
+one-line change at the foot of that file is what produces `foundry-plain`.
 
 ## Four extra styles, applied from markdown
 

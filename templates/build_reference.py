@@ -7,7 +7,7 @@ specimen report; pandoc reads styles, numbering, page setup and the running head
 foot from the file and discards that body.
 """
 import shutil, subprocess, sys, tempfile, zipfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -858,6 +858,11 @@ THEMES = [
                  Head(22, "6A6A70", bold=False, italic=True, before=220, after=60)],
           **BURGUNDY),
 ]
+
+# Foundry without heading numbers, for anyone whose Word keeps discarding style
+# numbering, or who prefers pandoc's --number-sections.
+THEMES.append(replace(THEMES[0], key="foundry-plain",
+                      label="C — dense technical, unnumbered", numbered=False))
 
 if __name__ == "__main__":
     sys.exit(main())
