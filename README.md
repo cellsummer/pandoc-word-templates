@@ -157,6 +157,26 @@ Use one route or the other, never both: with style numbering still active,
 `numbered=False` on its theme in `templates/build_reference.py` and rebuild — the
 one-line change at the foot of that file is what produces `foundry-plain`.
 
+## Table width
+
+Pandoc writes each table's width onto the table itself, so no reference document can
+control it: direct formatting beats the table style. Two shapes come out of pandoc, and
+neither is what Word's menu calls AutoFit Window:
+
+| Markdown table | What pandoc writes | How Word reports it |
+|---|---|---|
+| columns carry relative widths, or the table is wide | width 100%, fixed layout | Fixed Column Width |
+| a short table with no widths | width auto | AutoFit to Contents |
+
+To set every table to AutoFit Window, run the post-processor over the converted file:
+
+    pandoc report.md --reference-doc=templates/foundry-reference.docx -o report.docx
+    python3 scripts/autofit_tables.py report.docx
+
+It rewrites each table to 100% width with an automatic layout. Column proportions from
+the markdown stay as the starting point, and Word adjusts them to the content and to the
+text column. The script edits the file in place and reports how many tables it changed.
+
 ## Four extra styles, applied from markdown
 
 ```markdown
@@ -192,7 +212,8 @@ Source: consolidated ledger extract, 31 August 2026.
 
 ## Repository
 
-    templates/build_reference.py       all four templates, as one parameterised script
+    templates/build_reference.py       all five templates, as one parameterised script
+    scripts/autofit_tables.py          sets converted tables to AutoFit Window
     templates/*-reference.docx         the built reference documents
     docs/preview/                      the screenshots used above
     test/sample.md                     exercises every supported element
