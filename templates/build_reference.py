@@ -26,7 +26,7 @@ def code_palette(t):
         "number": ("8C2D18", False), "string": ("1D6F42", False),
         "comment": ("8A8F98", False), "function": ("6A3D9A", False),
         "plain": (t.code_fg, False), "alert": ("B3261E", True),
-    }
+    } | t.code_colors
 
 
 @dataclass
@@ -67,8 +67,8 @@ class Theme:
     justify: bool
     numbered: bool
     number_hang: bool               # hanging indent under the heading number
-    title_kind: str                 # band | rule | open | reverse
-    table_kind: str                 # grid | hairline | open | dark
+    title_kind: str                 # band | rule | open | reverse | plain
+    table_kind: str                 # grid | hairline | open | dark | wiki
     code_bg: str
     code_fg: str
     meta_mono: bool                 # author, date and the running foot in the mono face
@@ -76,6 +76,8 @@ class Theme:
     margin_y: int
     title_size: int
     heads: list = field(default_factory=list)
+    code_kind: str = "bar"          # bar: accent rule on the left | box: hairline frame
+    code_colors: dict = field(default_factory=dict)     # overrides code_palette roles
 
     @property
     def text_w(self):
@@ -158,15 +160,19 @@ def title_block(t):
     elif t.title_kind == "rule":
         skin = ""
         title_c, sub_c, meta_c, name_c = t.accent, t.muted, t.muted, t.ink
-    else:                                        # open
+    else:                                        # open, plain
         skin = ""
         title_c, sub_c, meta_c, name_c = t.ink, t.muted, t.muted, t.ink
 
-    top_rule = border("top", t.accent, sz=24, space=10) if t.title_kind == "rule" else ""
+    title_rule = ""
+    if t.title_kind == "rule":
+        title_rule = border("top", t.accent, sz=24, space=10)
+    elif t.title_kind == "plain":
+        title_rule = border("bottom", t.rule, space=4)
     s = [style("Title", "Title", nxt="Subtitle", link="TitleChar",
-               ppr=skin + para(before=0, after=60, keep_next=True, borders=top_rule),
+               ppr=skin + para(before=0, after=60, keep_next=True, borders=title_rule),
                rpr=font(t.display, t.title_size, title_c,
-                        bold=t.title_kind != "open")),
+                        bold=t.title_kind not in ("open", "plain"))),
          style("TitleChar", "Title Char", kind="character", based="DefaultParagraphFont",
                quick=False, rpr=font(t.display, t.title_size, title_c)),
          style("Subtitle", "Subtitle", nxt="Author", link="SubtitleChar",
@@ -243,6 +249,13 @@ def table_style(t):
                 f'<w:tcPr><w:tcBorders>{border("bottom", t.accent, sz=16)}'
                 "</w:tcBorders></w:tcPr>")
         banding = t.zebra
+    elif t.table_kind == "wiki":
+        # Every cell framed in one grey, the header a step darker than the body fill.
+        borders = "".join(border(e, t.rule) for e in
+                          ("top", "bottom", "left", "right", "insideH", "insideV"))
+        head = (f'<w:rPr>{font(t.sans, t.body_size - 2, t.ink, bold=True)}</w:rPr>'
+                f'<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="{t.band}"/></w:tcPr>')
+        banding = ""
     else:                                        # dark header band
         borders = border("insideH", t.hair) + border("bottom", t.accent, sz=12)
         head = (f'<w:rPr>{font(t.sans, t.body_size - 3, "FFFFFF", bold=True)}</w:rPr>'
@@ -252,16 +265,19 @@ def table_style(t):
     band_pr = ('<w:tblStylePr w:type="band1Horz"><w:tcPr>'
                f'<w:shd w:val="clear" w:color="auto" w:fill="{banding}"/>'
                "</w:tcPr></w:tblStylePr>") if banding else ""
+    body_fill = (f'<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="{t.zebra}"/></w:tcPr>'
+                 if t.table_kind == "wiki" else "")
+    total_rule = t.rule if t.table_kind == "wiki" else t.accent
     return ('<w:style w:type="table" w:styleId="Table"><w:name w:val="Table"/>'
             '<w:basedOn w:val="TableNormal"/><w:qFormat/>'
             f'<w:pPr>{para(after=0, line=240)}</w:pPr>'
             f'<w:rPr>{font(t.sans, t.body_size - 2, t.ink)}</w:rPr>'
-            f"<w:tblPr><w:tblBorders>{borders}</w:tblBorders>{cell}</w:tblPr>"
+            f"<w:tblPr><w:tblBorders>{borders}</w:tblBorders>{cell}</w:tblPr>{body_fill}"
             f'<w:tblStylePr w:type="firstRow"><w:pPr><w:keepNext/></w:pPr>{head}'
             "</w:tblStylePr>" + band_pr +
             f'<w:tblStylePr w:type="lastRow"><w:rPr>{font(t.sans, t.body_size - 2, t.ink, bold=True)}</w:rPr>'
             f'<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="{t.soft}"/>'
-            f'<w:tcBorders>{border("top", t.accent, sz=12)}</w:tcBorders></w:tcPr>'
+            f'<w:tcBorders>{border("top", total_rule, sz=12)}</w:tcBorders></w:tcPr>'
             "</w:tblStylePr></w:style>"
             '<w:style w:type="table" w:default="1" w:styleId="TableNormal">'
             f"<w:name w:val=\"Normal Table\"/><w:tblPr>{cell}</w:tblPr></w:style>")
@@ -323,7 +339,11 @@ def styles_xml(t):
     add(style("CaptionedFigure", "Captioned Figure", based="BodyText", nxt="BodyText",
               ppr=para(before=140, after=200, keep_next=True, jc=None)))
 
-    code_border = border("left", t.accent, sz=18, space=8) + pad(t.code_bg, x=8, y=6)
+    if t.code_kind == "box":
+        code_border = "".join(border(e, t.hair, space=s_) for e, s_ in
+                              (("top", 6), ("bottom", 6), ("left", 8), ("right", 8)))
+    else:
+        code_border = border("left", t.accent, sz=18, space=8) + pad(t.code_bg, x=8, y=6)
     add(style("SourceCode", "Source Code", nxt="BodyText", custom=True,
               ppr='<w:wordWrap w:val="off"/>' +
                   para(before=0, after=0, line=240, shade=t.code_bg,
@@ -858,6 +878,32 @@ THEMES = [
                  Head(22, "6A6A70", bold=False, italic=True, before=220, after=60)],
           **BURGUNDY),
 ]
+
+# Encyclopedic: no colour outside the code panel. Grey carries every rule and fill, and
+# the serif face marks the title and top-level headings only.
+INK, GREY, RULE = "202122", "54595D", "A2A9B1"
+THEMES.append(
+    Theme(key="almanac", label="E — formal encyclopedic, monochrome, Georgia and Arial",
+          sans="Arial", mono="Consolas", display="Georgia",
+          accent=GREY, accent_dark=INK, soft="F8F9FA",
+          warn=INK, warn_soft="EAECF0",
+          ink=INK, muted=GREY, rule=RULE, hair="C8CCD1",
+          band="EAECF0", zebra="F8F9FA",
+          body_size=21, body_line=288, body_after=140, justify=False,
+          numbered=False, number_hang=False, title_kind="plain", table_kind="wiki",
+          code_bg="F8F9FA", code_fg=INK, meta_mono=False,
+          margin_x=int(2.5 * CM), margin_y=int(2.4 * CM), title_size=48,
+          heads=[Head(34, INK, bold=False, bottom=4, bottom_color=RULE, before=400, after=120),
+                 Head(25, INK, before=300, after=80),
+                 Head(22, INK, before=240, after=60),
+                 Head(21, INK, before=200, after=40),
+                 Head(21, GREY, italic=True, before=180, after=40),
+                 Head(21, GREY, bold=False, italic=True, before=160, after=40)],
+          code_kind="box",
+          code_colors={"keyword": ("1F3F73", True), "string": ("2F6B3A", False),
+                       "comment": ("72777D", False), "type": (INK, False),
+                       "number": (INK, False), "function": (INK, False),
+                       "alert": (INK, True)}))
 
 # Foundry without heading numbers, for anyone whose Word keeps discarding style
 # numbering, or who prefers pandoc's --number-sections.

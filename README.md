@@ -1,8 +1,9 @@
 # Word report templates
 
-Five pandoc reference documents, built from one script. Style C keeps its original slate
+Six pandoc reference documents, built from one script. Style C keeps its original slate
 blue and Calibri; styles A, B and D share a burgundy palette and the Aptos typeface, so
-what separates them is structure, not colour. C also ships in an unnumbered variant.
+what separates them is structure, not colour. E has no colour at all. C also ships in an
+unnumbered variant.
 
     pandoc report.md --reference-doc=templates/chancery-reference.docx --toc -o report.docx
 
@@ -25,6 +26,7 @@ inventory always matches the installed pandoc (built and tested against pandoc 3
 | `atlas-reference.docx` | D — bold editorial | Aptos | Burgundy `8C1D34` | unnumbered, heavy, accent rule above H1 | charcoal header band | medium |
 | `foundry-reference.docx` | C — dense technical | Calibri | Slate blue `21456E` | numbered 1.1.1, reversed H1 bar | full grid | high |
 | `foundry-plain-reference.docx` | C — dense technical, unnumbered | Calibri | Slate blue `21456E` | none; headings sit flush left | full grid | high |
+| `almanac-reference.docx` | E — formal encyclopedic | Georgia, Arial | none, greys only | unnumbered, serif H1 over a grey rule | grey grid, grey header | medium |
 
 `foundry-plain` is the same template with heading numbering removed: identical styles,
 spacing and colour, headings flush to the margin. Use it when Word keeps discarding
@@ -33,7 +35,9 @@ style numbering, or when you would rather number with `--number-sections`.
 Differences that carry the identity: A justifies its text, numbers its headings and
 keeps every rule hairline. B triples the white space, drops numbering and sets a 32 pt
 light title. D reverses the title block out of burgundy and runs a charcoal header band
-across its tables.
+across its tables. E follows an encyclopedia page: serif title and top-level headings
+over a hairline rule, sans text, grey-framed tables, and colour only in code keywords,
+strings and comments.
 
 ## Preview
 
@@ -50,6 +54,11 @@ size image. `foundry-plain` is not shown: it is the C pages below without the nu
 | <a href="docs/preview/foundry-page-1.png"><img src="docs/preview/foundry-page-1.png" width="430" alt="Foundry, page one"></a> | <a href="docs/preview/atlas-page-1.png"><img src="docs/preview/atlas-page-1.png" width="430" alt="Atlas, page one"></a> |
 | Dense technical: reversed heading bar, tight spacing, full grid tables | Bold editorial: reversed title block, charcoal table header |
 
+| E — Almanac | |
+|:---:|:---:|
+| <a href="docs/preview/almanac-page-1.png"><img src="docs/preview/almanac-page-1.png" width="430" alt="Almanac, page one"></a> | |
+| Formal encyclopedic: monochrome, serif headings over grey rules | |
+
 Tables, figures, equations and the light code panel:
 
 | A — Chancery | B — Meridian |
@@ -60,18 +69,22 @@ Tables, figures, equations and the light code panel:
 |:---:|:---:|
 | <a href="docs/preview/foundry-detail.png"><img src="docs/preview/foundry-detail.png" width="430" alt="Foundry, tables and code"></a> | <a href="docs/preview/atlas-detail.png"><img src="docs/preview/atlas-detail.png" width="430" alt="Atlas, tables and code"></a> |
 
+| E — Almanac | |
+|:---:|:---:|
+| <a href="docs/preview/almanac-detail.png"><img src="docs/preview/almanac-detail.png" width="430" alt="Almanac, tables and code"></a> | |
+
 These pages were rendered with LibreOffice on a machine without Aptos, Calibri or
 Consolas installed, so the letterforms are substitutes. Layout, spacing and colour are
 accurate; the type is not.
 
 ## Fonts
 
-| Role | A, B, D | C | Ships with |
-|---|---|---|---|
-| Text, headings, tables | Aptos | Calibri | Aptos: Microsoft 365. Calibri: Office 2007 and later |
-| Large titles | Aptos Display | Calibri | with Aptos |
-| Code, inline code | Consolas | Consolas | Office, Windows and Mac |
-| Equations | Cambria Math | Cambria Math | Word itself |
+| Role | A, B, D | C | E | Ships with |
+|---|---|---|---|---|
+| Text, headings, tables | Aptos | Calibri | Arial | Aptos: Microsoft 365. Calibri: Office 2007 and later. Arial: every system |
+| Title, top-level headings | Aptos Display | Calibri | Georgia | with Aptos; Georgia: Windows and Mac |
+| Code, inline code | Consolas | Consolas | Consolas | Office, Windows and Mac |
+| Equations | Cambria Math | Cambria Math | Cambria Math | Word itself |
 
 One caveat on Aptos, since it is newer than the rest: it arrived as the Microsoft 365
 default in 2024 and is not present in the perpetual Office 2019 or 2021 releases, where
@@ -85,7 +98,7 @@ serif character with a one-word change, if that matters more than the single typ
 
 ## Look before you choose
 
-Open any of the four in Word. The body is a three-page specimen report using every
+Open any of them in Word. The body is a three-page specimen report using every
 style: title block, headings to level six, lists, definitions, quote, note and caution
 blocks, a table with caption and source note, a figure placeholder, an equation, a code
 block, a footnote, and static table of contents entries.
@@ -119,10 +132,12 @@ Every style below is one pandoc writes by itself. Nothing needs markup in the ma
 | running head and foot | header, footer |
 | `$math$`, `$$math$$` | native OMML, Cambria Math |
 
-Code blocks use a light panel in all four templates, with an accent rule down the left
-edge. Keyword colour follows each theme's accent; inline code shares the panel colour.
+Code blocks use a light panel in every template. A to D add an accent rule down the left
+edge and take the keyword colour from the theme accent; E frames the panel in a grey
+hairline and colours only keywords, strings and comments. Inline code shares the panel
+colour.
 
-See *Heading numbers* below for how A and C number their headings. B and D do not
+See *Heading numbers* below for how A and C number their headings. B, D and E do not
 number.
 
 ## Heading numbers
@@ -212,7 +227,7 @@ Source: consolidated ledger extract, 31 August 2026.
 
 ## Repository
 
-    templates/build_reference.py       all five templates, as one parameterised script
+    templates/build_reference.py       all six templates, as one parameterised script
     scripts/autofit_tables.py          sets converted tables to AutoFit Window
     templates/*-reference.docx         the built reference documents
     docs/preview/                      the screenshots used above
@@ -227,7 +242,7 @@ Rendered proofs and converted output are not tracked. To produce them:
 ## Verification
 
 Each template converts `test/sample.md` without a single undefined style, and none leaks
-its specimen body, footnote or figure into the output. All four were rendered to PDF
+its specimen body, footnote or figure into the output. All were rendered to PDF
 with LibreOffice and read page by page.
 
 The numbering fix was checked as far as this machine allows: the XML now matches Word's
