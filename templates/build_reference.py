@@ -392,7 +392,9 @@ def styles_xml(t):
               ppr=para(after=40, line=240), rpr=font(t.sans, t.body_size - 4, t.muted)))
     add(style("FootnoteReference", "Footnote Reference", kind="character",
               based="DefaultParagraphFont", quick=False,
-              rpr=font(t.sans, t.body_size - 6, t.accent, bold=True, vert="superscript")))
+              # No size: superscript already shrinks the mark, and an explicit small
+              # size shrank it twice. It now follows the paragraph it sits in.
+              rpr=font(t.sans, None, t.accent, bold=True, vert="superscript")))
     add(style("Hyperlink", "Hyperlink", kind="character", based="DefaultParagraphFont",
               quick=False, rpr=font(t.sans, None, t.accent, underline=True)))
     add(style("SectionNumber", "Section Number", kind="character",
