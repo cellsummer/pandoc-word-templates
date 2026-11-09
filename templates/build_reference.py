@@ -6,7 +6,7 @@ inventory always matches the installed pandoc version. The body of each file is 
 specimen report; pandoc reads styles, numbering, page setup and the running head and
 foot from the file and discards that body.
 """
-import shutil, subprocess, sys, tempfile, zipfile
+import re, shutil, subprocess, sys, tempfile, zipfile
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
@@ -84,46 +84,59 @@ class Theme:
         return PAGE_W - 2 * self.margin_x
 
 # ---------------------------------------------------------------- xml helpers
+# Word reads property elements in schema order, one per kind. Every helper below writes
+# them in that order, because Word may drop or reject the rest.
+EDGES = ("top", "left", "bottom", "right", "insideH", "insideV")
+
 def font(name, size=None, color=None, bold=False, italic=False,
-         caps=False, shade=None, vert=None, track=None):
+         caps=False, shade=None, vert=None, track=None, underline=False):
     p = [f'<w:rFonts w:ascii="{name}" w:hAnsi="{name}" w:cs="{name}"/>']
-    if bold:   p.append("<w:b/>")
-    if italic: p.append("<w:i/>")
-    if caps:   p.append("<w:smallCaps/>")
-    if color:  p.append(f'<w:color w:val="{color}"/>')
-    if size:   p.append(f'<w:sz w:val="{size}"/><w:szCs w:val="{size}"/>')
-    if shade:  p.append(f'<w:shd w:val="clear" w:color="auto" w:fill="{shade}"/>')
-    if vert:   p.append(f'<w:vertAlign w:val="{vert}"/>')
-    if track:  p.append(f'<w:spacing w:val="{track}"/>')   # letter spacing
+    if bold:      p.append("<w:b/>")
+    if italic:    p.append("<w:i/>")
+    if caps:      p.append("<w:smallCaps/>")
+    if color:     p.append(f'<w:color w:val="{color}"/>')
+    if track:     p.append(f'<w:spacing w:val="{track}"/>')   # letter spacing
+    if size:      p.append(f'<w:sz w:val="{size}"/><w:szCs w:val="{size}"/>')
+    if underline: p.append('<w:u w:val="single"/>')
+    if shade:     p.append(f'<w:shd w:val="clear" w:color="auto" w:fill="{shade}"/>')
+    if vert:      p.append(f'<w:vertAlign w:val="{vert}"/>')
     return "".join(p)
 
 def border(edge, color, sz=4, space=0, style="single"):
     return f'<w:{edge} w:val="{style}" w:sz="{sz}" w:space="{space}" w:color="{color}"/>'
 
+def edges(xml):
+    """One border per edge, in schema order. A later border replaces an earlier one, so
+    an accent bar written after pad() takes the place of its left edge."""
+    by_edge = {m.group(1): m.group(0) for m in re.finditer(r"<w:(\w+) [^>]*/>", xml)}
+    return "".join(by_edge[e] for e in EDGES if e in by_edge)
+
 def pad(color, x=8, y=5):
     """Four same-colour borders: Word has no padding, so borders provide it."""
-    return (border("top", color, sz=2, space=y) + border("bottom", color, sz=2, space=y) +
-            border("left", color, sz=2, space=x) + border("right", color, sz=2, space=x))
+    return "".join(border(e, color, sz=2, space=y if e in ("top", "bottom") else x)
+                   for e in EDGES[:4])
 
-def para(before=None, after=None, line=240, ind=None, hanging=None, borders="",
-         shade=None, keep_next=False, keep_lines=False, numid=None, ilvl=0,
-         contextual=False, tabs="", jc=None):
+def para(before=None, after=None, line=240, ind=None, hanging=None, right=None,
+         borders="", shade=None, keep_next=False, keep_lines=False, numid=None, ilvl=0,
+         contextual=False, tabs="", jc=None, wrap=True):
     p = []
     if keep_next:  p.append("<w:keepNext/>")
     if keep_lines: p.append("<w:keepLines/>")
     if numid is not None:
         p.append(f'<w:numPr><w:ilvl w:val="{ilvl}"/><w:numId w:val="{numid}"/></w:numPr>')
+    if borders: p.append(f"<w:pBdr>{edges(borders)}</w:pBdr>")
     if shade:   p.append(f'<w:shd w:val="clear" w:color="auto" w:fill="{shade}"/>')
-    if borders: p.append(f"<w:pBdr>{borders}</w:pBdr>")
     if tabs:    p.append(f"<w:tabs>{tabs}</w:tabs>")
+    if not wrap: p.append('<w:wordWrap w:val="off"/>')
     sp = []
     if before is not None: sp.append(f'w:before="{before}"')
     if after is not None:  sp.append(f'w:after="{after}"')
     if line:               sp.append(f'w:line="{line}" w:lineRule="auto"')
     if sp: p.append(f'<w:spacing {" ".join(sp)}/>')
-    if ind is not None or hanging is not None:
+    if ind is not None or hanging is not None or right is not None:
         a = []
         if ind is not None:     a.append(f'w:left="{ind}"')
+        if right is not None:   a.append(f'w:right="{right}"')
         if hanging is not None: a.append(f'w:hanging="{hanging}"')
         p.append(f'<w:ind {" ".join(a)}/>')
     if contextual: p.append("<w:contextualSpacing/>")
@@ -149,20 +162,21 @@ def title_block(t):
     """Title, Subtitle, Author and Date, as one visual unit per title treatment."""
     meta = t.mono if t.meta_mono else t.sans
     if t.title_kind == "band":
-        skin = para(shade=t.band, borders=border("left", t.accent, sz=24, space=8) +
-                    border("top", t.band, space=6) + border("bottom", t.band, space=6) +
-                    border("right", t.band, space=8))
+        skin = dict(shade=t.band, borders=border("top", t.band, space=6) +
+                    border("left", t.accent, sz=24, space=8) +
+                    border("bottom", t.band, space=6) + border("right", t.band, space=8))
         title_c, sub_c, meta_c, name_c = t.accent, t.muted, t.muted, t.ink
     elif t.title_kind == "reverse":
-        skin = para(shade=t.accent, borders=pad(t.accent, x=10, y=8))
+        skin = dict(shade=t.accent, borders=pad(t.accent, x=10, y=8))
         title_c, sub_c, meta_c, name_c = "FFFFFF", "F2E4E7", "EBD6DA", "FFFFFF"
         meta = t.sans
     elif t.title_kind == "rule":
-        skin = ""
+        skin = dict(borders="")
         title_c, sub_c, meta_c, name_c = t.accent, t.muted, t.muted, t.ink
     else:                                        # open, plain
-        skin = ""
+        skin = dict(borders="")
         title_c, sub_c, meta_c, name_c = t.ink, t.muted, t.muted, t.ink
+    shade, skin_edges = skin.get("shade"), skin["borders"]
 
     title_rule = ""
     if t.title_kind == "rule":
@@ -170,36 +184,36 @@ def title_block(t):
     elif t.title_kind == "plain":
         title_rule = border("bottom", t.rule, space=4)
     s = [style("Title", "Title", nxt="Subtitle", link="TitleChar",
-               ppr=skin + para(before=0, after=60, keep_next=True, borders=title_rule),
+               ppr=para(before=0, after=60, keep_next=True, shade=shade,
+                        borders=skin_edges + title_rule),
                rpr=font(t.display, t.title_size, title_c,
                         bold=t.title_kind not in ("open", "plain"))),
          style("TitleChar", "Title Char", kind="character", based="DefaultParagraphFont",
                quick=False, rpr=font(t.display, t.title_size, title_c)),
          style("Subtitle", "Subtitle", nxt="Author", link="SubtitleChar",
-               ppr=skin + para(before=0, after=160, keep_next=True),
+               ppr=para(before=0, after=160, keep_next=True, shade=shade,
+                        borders=skin_edges),
                rpr=font(t.sans, 24, sub_c, italic=t.title_kind == "rule")),
          style("SubtitleChar", "Subtitle Char", kind="character",
                based="DefaultParagraphFont", quick=False, rpr=font(t.sans, 24, sub_c)),
          style("Author", "Author", nxt="Date",
-               ppr=skin + para(before=0, after=0, keep_next=True,
-                               borders=border("top", t.rule, space=6)
-                               if t.title_kind in ("rule", "open") else ""),
+               ppr=para(before=0, after=0, keep_next=True, shade=shade,
+                        borders=skin_edges + (border("top", t.rule, space=6)
+                                              if t.title_kind in ("rule", "open") else "")),
                rpr=font(meta, 18, name_c, bold=True)),
          style("Date", "Date", nxt="BodyText",
-               ppr=skin + para(before=0, after=280),
+               ppr=para(before=0, after=280, shade=shade, borders=skin_edges),
                rpr=font(meta, 18, meta_c))]
     return "".join(s)
 
 def heading_styles(t):
     s = []
     for i, h in enumerate(t.heads, start=1):
-        bdr = ""
+        bdr = pad(h.shade) if h.shade else ""
         if h.top:
             bdr += border("top", t.accent, sz=h.top, space=6)
         if h.bottom:
             bdr += border("bottom", h.bottom_color or t.accent, sz=h.bottom, space=3)
-        if h.shade:
-            bdr += pad(h.shade)
         numbered = t.numbered and i <= 5
         stop = int((0.7 + 0.35 * i) * CM)
         hang = stop if (numbered and t.number_hang) else None
@@ -233,8 +247,8 @@ def table_style(t):
                    border("left", t.hair) + border("right", t.hair) +
                    border("insideH", t.hair) + border("insideV", t.hair))
         head = (f'<w:rPr>{font(t.sans, t.body_size - 3, "FFFFFF", bold=True)}</w:rPr>'
-                f'<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="{t.accent}"/>'
-                f'<w:tcBorders>{border("bottom", t.accent, sz=12)}</w:tcBorders></w:tcPr>')
+                f'<w:tcPr><w:tcBorders>{border("bottom", t.accent, sz=12)}</w:tcBorders>'
+                f'<w:shd w:val="clear" w:color="auto" w:fill="{t.accent}"/></w:tcPr>')
         banding = t.zebra
     elif t.table_kind == "hairline":
         borders = (border("top", t.accent, sz=12) + border("bottom", t.accent, sz=12) +
@@ -272,12 +286,12 @@ def table_style(t):
             '<w:basedOn w:val="TableNormal"/><w:qFormat/>'
             f'<w:pPr>{para(after=0, line=240)}</w:pPr>'
             f'<w:rPr>{font(t.sans, t.body_size - 2, t.ink)}</w:rPr>'
-            f"<w:tblPr><w:tblBorders>{borders}</w:tblBorders>{cell}</w:tblPr>{body_fill}"
+            f"<w:tblPr><w:tblBorders>{edges(borders)}</w:tblBorders>{cell}</w:tblPr>{body_fill}"
             f'<w:tblStylePr w:type="firstRow"><w:pPr><w:keepNext/></w:pPr>{head}'
             "</w:tblStylePr>" + band_pr +
             f'<w:tblStylePr w:type="lastRow"><w:rPr>{font(t.sans, t.body_size - 2, t.ink, bold=True)}</w:rPr>'
-            f'<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="{t.soft}"/>'
-            f'<w:tcBorders>{border("top", total_rule, sz=12)}</w:tcBorders></w:tcPr>'
+            f'<w:tcPr><w:tcBorders>{border("top", total_rule, sz=12)}</w:tcBorders>'
+            f'<w:shd w:val="clear" w:color="auto" w:fill="{t.soft}"/></w:tcPr>'
             "</w:tblStylePr></w:style>"
             '<w:style w:type="table" w:default="1" w:styleId="TableNormal">'
             f"<w:name w:val=\"Normal Table\"/><w:tblPr>{cell}</w:tblPr></w:style>")
@@ -340,13 +354,12 @@ def styles_xml(t):
               ppr=para(before=140, after=200, keep_next=True, jc=None)))
 
     if t.code_kind == "box":
-        code_border = "".join(border(e, t.hair, space=s_) for e, s_ in
-                              (("top", 6), ("bottom", 6), ("left", 8), ("right", 8)))
+        code_border = "".join(border(e, t.hair, space=6 if e in ("top", "bottom") else 8)
+                              for e in EDGES[:4])
     else:
-        code_border = border("left", t.accent, sz=18, space=8) + pad(t.code_bg, x=8, y=6)
+        code_border = pad(t.code_bg, x=8, y=6) + border("left", t.accent, sz=18, space=8)
     add(style("SourceCode", "Source Code", nxt="BodyText", custom=True,
-              ppr='<w:wordWrap w:val="off"/>' +
-                  para(before=0, after=0, line=240, shade=t.code_bg,
+              ppr=para(before=0, after=0, line=240, shade=t.code_bg, wrap=False,
                        borders=code_border, keep_lines=True, contextual=True),
               rpr=font(t.mono, t.body_size - 3, t.code_fg)))
     add(style("VerbatimChar", "Verbatim Char", kind="character",
@@ -379,7 +392,7 @@ def styles_xml(t):
               based="DefaultParagraphFont", quick=False,
               rpr=font(t.sans, t.body_size - 6, t.accent, bold=True, vert="superscript")))
     add(style("Hyperlink", "Hyperlink", kind="character", based="DefaultParagraphFont",
-              quick=False, rpr=font(t.sans, None, t.accent) + '<w:u w:val="single"/>'))
+              quick=False, rpr=font(t.sans, None, t.accent, underline=True)))
     add(style("SectionNumber", "Section Number", kind="character",
               based="DefaultParagraphFont", quick=False))
     add(style("Bibliography", "Bibliography", based="BodyText",
@@ -408,16 +421,16 @@ def styles_xml(t):
 
     add(style("Lead", "Lead", based="BodyText", nxt="BodyText", custom=True,
               ppr=para(before=140, after=140, shade=t.warn_soft, jc=None,
-                       borders=border("left", t.warn, sz=18, space=8) +
-                               pad(t.warn_soft)),
+                       borders=pad(t.warn_soft) +
+                               border("left", t.warn, sz=18, space=8)),
               rpr=font(t.sans, t.body_size, t.ink, bold=True)))
     add(style("Note", "Note", based="BodyText", nxt="BodyText", custom=True,
               ppr=para(before=140, after=140, shade=t.soft, jc=None,
-                       borders=border("left", t.accent, sz=18, space=8) + pad(t.soft)),
+                       borders=pad(t.soft) + border("left", t.accent, sz=18, space=8)),
               rpr=font(t.sans, t.body_size - 1, t.ink)))
     add(style("Caution", "Caution", based="Note", nxt="BodyText", custom=True,
               ppr=para(before=140, after=140, shade=t.warn_soft, jc=None,
-                       borders=border("left", t.warn, sz=18, space=8) + pad(t.warn_soft))))
+                       borders=pad(t.warn_soft) + border("left", t.warn, sz=18, space=8))))
     add(style("SourceNote", "Source Note", based="BodyText", nxt="BodyText", custom=True,
               ppr=para(before=0, after=160, jc=None),
               rpr=font(t.mono if t.meta_mono else t.sans, t.body_size - 4, t.muted)))
@@ -600,9 +613,9 @@ def specimen_equation():
 
 def specimen_figure(t):
     """Direct formatting, not a style: an image in a real report must stay unboxed."""
-    box = (f'<w:shd w:val="clear" w:color="auto" w:fill="{t.band}"/>'
-           f'<w:pBdr>{border("top", t.hair, space=28)}{border("bottom", t.hair, space=28)}'
-           f'{border("left", t.hair, space=8)}{border("right", t.hair, space=8)}</w:pBdr>'
+    box = (f'<w:pBdr>{border("top", t.hair, space=28)}{border("left", t.hair, space=8)}'
+           f'{border("bottom", t.hair, space=28)}{border("right", t.hair, space=8)}</w:pBdr>'
+           f'<w:shd w:val="clear" w:color="auto" w:fill="{t.band}"/>'
            '<w:jc w:val="center"/>')
     txt = ('<w:r><w:rPr>' + font(t.mono, t.body_size - 4, t.muted) + "</w:rPr>"
            '<w:t xml:space="preserve">CHART OR PHOTOGRAPH — an image sits here, '
