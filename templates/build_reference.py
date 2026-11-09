@@ -71,7 +71,6 @@ class Theme:
     table_kind: str                 # grid | hairline | open | dark | wiki
     code_bg: str
     code_fg: str
-    meta_mono: bool                 # author, date and the running foot in the mono face
     margin_x: int
     margin_y: int
     title_size: int
@@ -172,7 +171,6 @@ def style(sid, name, kind="paragraph", based="Normal", nxt=None, ppr="", rpr="",
 # ---------------------------------------------------------------- styles.xml
 def title_block(t):
     """Title, Subtitle, Author and Date, as one visual unit per title treatment."""
-    meta = t.mono if t.meta_mono else t.sans
     if t.title_kind == "band":
         skin = dict(shade=t.band, borders=border("top", t.band, space=6) +
                     border("left", t.accent, sz=24, space=8) +
@@ -183,7 +181,6 @@ def title_block(t):
         skin = dict(shade=t.accent, borders=pad(t.accent, x=10, y=8),
                     ind=inset(10, 2), right=inset(10, 2))
         title_c, sub_c, meta_c, name_c = "FFFFFF", "F2E4E7", "EBD6DA", "FFFFFF"
-        meta = t.sans
     elif t.title_kind == "rule":
         skin = dict(borders="")
         title_c, sub_c, meta_c, name_c = t.accent, t.muted, t.muted, t.ink
@@ -214,10 +211,10 @@ def title_block(t):
                ppr=para(before=0, after=0, keep_next=True, **box,
                         borders=skin_edges + (border("top", t.rule, space=6)
                                               if t.title_kind in ("rule", "open") else "")),
-               rpr=font(meta, 18, name_c, bold=True)),
+               rpr=font(t.sans, 18, name_c, bold=True)),
          style("Date", "Date", nxt="BodyText",
                ppr=para(before=0, after=280, **box, borders=skin_edges),
-               rpr=font(meta, 18, meta_c))]
+               rpr=font(t.sans, 18, meta_c))]
     return "".join(s)
 
 def heading_styles(t):
@@ -228,11 +225,12 @@ def heading_styles(t):
             bdr += border("top", t.accent, sz=h.top, space=6)
         if h.bottom:
             bdr += border("bottom", h.bottom_color or t.accent, sz=h.bottom, space=3)
-        numbered = t.numbered and i <= 5
+        numbered = t.numbered and i <= NUMBERED_LEVELS
         shift = PAD if h.shade else 0
-        stop = int((0.7 + 0.35 * i) * CM)
-        hang = stop if (numbered and t.number_hang) else None
-        left = hang + shift if hang else (shift or None)
+        stop = number_stop(t, i)
+        # A shaded bar moves the number in by its padding, never the text after it.
+        hang = stop - shift if (numbered and t.number_hang) else None
+        left = stop if hang else (shift or None)
         tabs = f'<w:tab w:val="left" w:pos="{stop + shift}"/>' if i <= 5 else ""
         s.append(style(f"Heading{i}", f"heading {i}", nxt="BodyText",
                        link=f"Heading{i}Char",
@@ -438,13 +436,12 @@ def styles_xml(t):
 
     tabs = (f'<w:tab w:val="center" w:pos="{t.text_w // 2}"/>'
             f'<w:tab w:val="right" w:pos="{t.text_w}"/>')
-    hf_font = t.mono if t.meta_mono else t.sans
     add(style("Header", "header", nxt="BodyText", quick=False,
               ppr=para(after=0, tabs=tabs, borders=border("bottom", t.accent, sz=12, space=4)),
-              rpr=font(hf_font, t.body_size - 5, t.muted, track=14)))
+              rpr=font(t.sans, t.body_size - 5, t.muted, track=14)))
     add(style("Footer", "footer", nxt="BodyText", quick=False,
               ppr=para(after=0, tabs=tabs, borders=border("top", t.accent, sz=12, space=4)),
-              rpr=font(hf_font, t.body_size - 5, t.muted, track=14)))
+              rpr=font(t.sans, t.body_size - 5, t.muted, track=14)))
 
     add(style("Lead", "Lead", based="BodyText", nxt="BodyText", custom=True,
               ppr=para(before=200, after=200, shade=t.warn_soft, jc=None, ind=BAR,
@@ -461,7 +458,7 @@ def styles_xml(t):
                        borders=pad(t.warn_soft) + border("left", t.warn, sz=18, space=8))))
     add(style("SourceNote", "Source Note", based="BodyText", nxt="BodyText", custom=True,
               ppr=para(before=0, after=160, jc=None),
-              rpr=font(t.mono if t.meta_mono else t.sans, t.body_size - 4, t.muted)))
+              rpr=font(t.sans, t.body_size - 4, t.muted)))
 
     if t.numbered:
         add(numbering_style())
@@ -477,22 +474,30 @@ def styles_xml(t):
 LIST_STYLE_ID = "HeadingNumbers"
 LIST_DEF_NUM = 42          # carries the levels, owned by the numbering style
 HEADING_NUM = 45           # what the heading styles reference
+NUMBERED_LEVELS = 3        # deeper numbers, such as 1.1.1.1.1, read as noise
+NUMBER_HANG = int(1.5 * CM)
+
+def number_stop(t, level):
+    """Where heading text starts after its number. With a hanging indent, one position
+    for every level keeps the text of all headings on one edge."""
+    return NUMBER_HANG if t.number_hang else int((0.7 + 0.35 * level) * CM)
 
 def heading_numbering(t):
-    """Multilevel list bound to Heading 1-5, in Word's own linked-style form."""
+    """Multilevel list bound to the numbered heading levels, in Word's own linked-style
+    form."""
     lv = []
-    for i in range(5):
+    for i in range(NUMBERED_LEVELS):
         fmt = ".".join(f"%{n + 1}" for n in range(i + 1))
-        hang = int((0.7 + 0.35 * (i + 1)) * CM) if t.number_hang else 0
+        hang = NUMBER_HANG if t.number_hang else 0
         shift = PAD if t.heads[i].shade else 0
-        suff = "tab" if (t.number_hang and i) else "space"
-        ind = (f'<w:pPr><w:ind w:left="{hang + shift}" w:hanging="{hang}"/></w:pPr>'
+        suff = "tab" if t.number_hang else "space"
+        ind = (f'<w:pPr><w:ind w:left="{hang}" w:hanging="{hang - shift}"/></w:pPr>'
                if hang else "")
         lv.append(f'<w:lvl w:ilvl="{i}" w:tentative="0"><w:start w:val="1"/>'
                   f'<w:numFmt w:val="decimal"/><w:pStyle w:val="Heading{i + 1}"/>'
                   f'<w:suff w:val="{suff}"/><w:lvlText w:val="{fmt}"/>'
                   f'<w:lvlJc w:val="left"/>{ind}</w:lvl>')
-    for i in range(5, 9):
+    for i in range(NUMBERED_LEVELS, 9):
         lv.append(f'<w:lvl w:ilvl="{i}" w:tentative="0"><w:start w:val="1"/>'
                   '<w:numFmt w:val="none"/><w:lvlText w:val=""/>'
                   '<w:lvlJc w:val="left"/></w:lvl>')
@@ -870,10 +875,10 @@ THEMES = [
           warn="A35A00", warn_soft="FDF6EE",
           ink="16191D", muted="565C63", rule="B4BAC1", hair="D9DDE1",
           band="EEF1F4", zebra="F7F9FA",
-          body_size=20, body_line=240, body_after=100, justify=False,
+          body_size=21, body_line=240, body_after=100, justify=False,
           numbered=True, number_hang=True, title_kind="band", table_kind="grid",
-          code_bg="F4F6F8", code_fg="24292F", meta_mono=True,
-          margin_x=int(2.2 * CM), margin_y=int(2.0 * CM), title_size=40,
+          code_bg="F4F6F8", code_fg="24292F",
+          margin_x=int(2.5 * CM), margin_y=int(2.0 * CM), title_size=40,
           heads=[Head(28, "FFFFFF", shade="21456E", before=360, after=140),
                  Head(24, "21456E", bottom=4, bottom_color="D9DDE1"),
                  Head(21, "16191D", before=240, after=60),
@@ -887,7 +892,7 @@ THEMES = [
           band="F7EDEF", zebra="FAF6F7",
           body_size=22, body_line=276, body_after=120, justify=True,
           numbered=True, number_hang=False, title_kind="rule", table_kind="hairline",
-          code_bg="F8F5F5", code_fg="24292F", meta_mono=False,
+          code_bg="F8F5F5", code_fg="24292F",
           margin_x=int(2.8 * CM), margin_y=int(2.3 * CM), title_size=52,
           heads=[Head(36, "8C1D34", bold=False, bottom=12, before=480, after=180),
                  Head(28, "8C1D34", before=380, after=110),
@@ -903,7 +908,7 @@ THEMES = [
           band="F7EDEF", zebra="FBFAFA",
           body_size=22, body_line=312, body_after=200, justify=False,
           numbered=False, number_hang=False, title_kind="open", table_kind="open",
-          code_bg="F8F5F5", code_fg="24292F", meta_mono=False,
+          code_bg="F8F5F5", code_fg="24292F",
           margin_x=int(2.8 * CM), margin_y=int(2.5 * CM), title_size=64,
           heads=[Head(44, "202226", bold=False, bottom=24, before=620, after=200),
                  Head(30, "202226", before=440, after=130),
@@ -919,7 +924,7 @@ THEMES = [
           band="F7EDEF", zebra="FAF6F7",
           body_size=22, body_line=292, body_after=140, justify=False,
           numbered=False, number_hang=False, title_kind="reverse", table_kind="dark",
-          code_bg="F8F5F5", code_fg="24292F", meta_mono=False,
+          code_bg="F8F5F5", code_fg="24292F",
           margin_x=int(2.4 * CM), margin_y=int(2.2 * CM), title_size=60,
           heads=[Head(42, "2C2C30", top=24, before=560, after=180),
                  Head(29, "8C1D34", before=420, after=120),
@@ -942,7 +947,7 @@ THEMES.append(
           band="EAECF0", zebra="F8F9FA",
           body_size=21, body_line=288, body_after=140, justify=False,
           numbered=False, number_hang=False, title_kind="plain", table_kind="wiki",
-          code_bg="F8F9FA", code_fg=INK, meta_mono=False,
+          code_bg="F8F9FA", code_fg=INK,
           margin_x=int(2.5 * CM), margin_y=int(2.4 * CM), title_size=48,
           heads=[Head(34, INK, bold=False, bottom=4, bottom_color=RULE, before=400, after=120),
                  Head(25, INK, before=300, after=80),
