@@ -21,7 +21,7 @@ inventory always matches the installed pandoc (built and tested against pandoc 3
 
 | File | Style | Typeface | Accent | Headings | Tables | Density |
 |---|---|---|---|---|---|---|
-| `chancery-reference.docx` | A — classic executive | Aptos | Burgundy `8C1D34` | numbered 1.1.1, rule under H1 | hairline, rules only | medium, justified |
+| `chancery-reference.docx` | A — classic executive | Aptos | Burgundy `8C1D34` | numbered 1.1.1, rule under H1 | hairline, rules only | medium, justified and hyphenated |
 | `meridian-reference.docx` | B — modern and open | Aptos | Burgundy `8C1D34` | unnumbered, large and light | open, banded rows | low, much air |
 | `atlas-reference.docx` | D — bold editorial | Aptos | Burgundy `8C1D34` | unnumbered, heavy, accent rule above H1 | charcoal header band | medium |
 | `foundry-reference.docx` | C — dense technical | Calibri | Slate blue `21456E` | numbered 1.1.1, reversed H1 bar | full grid | high |
@@ -32,8 +32,8 @@ inventory always matches the installed pandoc (built and tested against pandoc 3
 spacing and colour, headings flush to the margin. Use it when Word keeps discarding
 style numbering, or when you would rather number with `--number-sections`.
 
-Differences that carry the identity: A justifies its text, numbers its headings and
-keeps every rule hairline. B triples the white space, drops numbering and sets a 32 pt
+Differences that carry the identity: A justifies and hyphenates its text, numbers its
+headings and keeps every rule hairline. B triples the white space, drops numbering and sets a 32 pt
 light title. D reverses the title block out of burgundy and runs a charcoal header band
 across its tables. E follows an encyclopedia page: serif title and top-level headings
 over a hairline rule, sans text, grey-framed tables, and colour only in code keywords,
@@ -98,7 +98,7 @@ serif character with a one-word change, if that matters more than the single typ
 
 ## Look before you choose
 
-Open any of them in Word. The body is a three-page specimen report using every
+Open any of them in Word. The body is a short specimen report using every
 style: title block, headings to level six, lists, definitions, quote, note and caution
 blocks, a table with caption and source note, a figure placeholder, an equation, a code
 block, a footnote, and static table of contents entries.
@@ -106,8 +106,9 @@ block, a footnote, and static table of contents entries.
 Pandoc reads only styles, numbering, page setup and the running head and foot from these
 files. The specimen text is discarded on every conversion.
 
-The running head carries the classification alone; the foot carries the classification
-and a page field. Both are placeholders — edit them once in the reference document.
+The running head shows the report title on the left, through a `STYLEREF` field on the
+Title style, and the classification on the right. The foot carries the page number. The
+classification is a placeholder — edit it once in the reference document.
 
 ## What the templates style
 
@@ -142,7 +143,9 @@ number.
 
 ## Heading numbers
 
-A and C number headings from a multilevel list bound to Heading 1–5. Word keeps
+A and C number headings from a multilevel list bound to Heading 1–3; deeper levels are
+not numbered. In C every number hangs at 1.5 cm, so all heading text starts on one
+edge. Word keeps
 style-linked numbering only when the file is written the way Word itself writes it, so
 the definition is a matched set:
 
@@ -165,6 +168,8 @@ Pandoc then writes each number as a run in the `Section Number` character style,
 followed by a tab. That style carries no formatting of its own, so numbers inherit the
 heading they sit in, and every numbered heading style has a tab stop at the matching
 indent.
+
+`--number-sections` numbers every level, not only the first three.
 
 Use one route or the other, never both: with style numbering still active,
 `--number-sections` produces headings that read `1 1 Executive summary`. For C, the
@@ -215,7 +220,9 @@ Source: consolidated ledger extract, 31 August 2026.
 ## Things to do by hand in Word
 
 - Update the TOC field (F9). Pandoc cannot fill it.
-- Edit the header and foot placeholder text in the reference document, not in reports.
+- Edit the classification in the reference document's head, not in reports.
+- Give every report a `title:`. The running head reads it from the Title paragraph; a
+  report without one shows a field error there.
 - Switch on *Table Design → Total Row* for a totals row; the accent rule and bold text
   are already defined in each table style.
 - List bullet and number glyphs come from pandoc's own numbering, not from the reference
