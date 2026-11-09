@@ -89,17 +89,19 @@ class Theme:
 EDGES = ("top", "left", "bottom", "right", "insideH", "insideV")
 
 def font(name, size=None, color=None, bold=False, italic=False,
-         caps=False, shade=None, vert=None, track=None, underline=False):
+         caps=False, shade=None, vert=None, track=None, underline=False, literal=False):
     p = [f'<w:rFonts w:ascii="{name}" w:hAnsi="{name}" w:cs="{name}"/>']
     if bold:      p.append("<w:b/>")
     if italic:    p.append("<w:i/>")
     if caps:      p.append("<w:smallCaps/>")
+    if literal:   p.append("<w:noProof/>")
     if color:     p.append(f'<w:color w:val="{color}"/>')
     if track:     p.append(f'<w:spacing w:val="{track}"/>')   # letter spacing
     if size:      p.append(f'<w:sz w:val="{size}"/><w:szCs w:val="{size}"/>')
     if underline: p.append('<w:u w:val="single"/>')
     if shade:     p.append(f'<w:shd w:val="clear" w:color="auto" w:fill="{shade}"/>')
     if vert:      p.append(f'<w:vertAlign w:val="{vert}"/>')
+    if literal:   p.append('<w:lang w:val="zxx"/>')   # no language: never hyphenated
     return "".join(p)
 
 def border(edge, color, sz=4, space=0, style="single"):
@@ -127,7 +129,7 @@ def pad(color, x=8, y=5):
 
 def para(before=None, after=None, line=240, ind=None, hanging=None, right=None,
          borders="", shade=None, keep_next=False, keep_lines=False, numid=None, ilvl=0,
-         contextual=False, tabs="", jc=None, wrap=True):
+         contextual=False, tabs="", jc=None, wrap=True, hyphenate=True):
     p = []
     if keep_next:  p.append("<w:keepNext/>")
     if keep_lines: p.append("<w:keepLines/>")
@@ -136,6 +138,7 @@ def para(before=None, after=None, line=240, ind=None, hanging=None, right=None,
     if borders: p.append(f"<w:pBdr>{edges(borders)}</w:pBdr>")
     if shade:   p.append(f'<w:shd w:val="clear" w:color="auto" w:fill="{shade}"/>')
     if tabs:    p.append(f"<w:tabs>{tabs}</w:tabs>")
+    if not hyphenate: p.append("<w:suppressAutoHyphens/>")
     if not wrap: p.append('<w:wordWrap w:val="off"/>')
     sp = []
     if before is not None: sp.append(f'w:before="{before}"')
@@ -379,12 +382,13 @@ def styles_xml(t):
     code_gap = 160
     add(style("SourceCode", "Source Code", nxt="BodyText", custom=True,
               ppr=para(before=code_gap, after=code_gap, line=240, shade=t.code_bg,
-                       wrap=False, borders=code_border, keep_lines=True, contextual=True,
+                       wrap=False, hyphenate=False, borders=code_border, keep_lines=True,
+                       contextual=True,
                        ind=code_ind, right=HAIR if t.code_kind == "box" else PAD),
-              rpr=font(t.mono, t.body_size - 3, t.code_fg)))
+              rpr=font(t.mono, t.body_size - 3, t.code_fg, literal=True)))
     add(style("VerbatimChar", "Verbatim Char", kind="character",
               based="DefaultParagraphFont", custom=True,
-              rpr=font(t.mono, t.body_size - 2, t.ink, shade=t.code_bg)))
+              rpr=font(t.mono, t.body_size - 2, t.ink, shade=t.code_bg, literal=True)))
     palette = code_palette(t)
     groups = [
         ("keyword", ["KeywordTok", "ControlFlowTok", "ImportTok"]),
@@ -404,7 +408,8 @@ def styles_xml(t):
         for sid in ids:
             add(style(sid, sid, kind="character", based="DefaultParagraphFont",
                       quick=False, custom=True,
-                      rpr=font(t.mono, t.body_size - 3, color, bold=bold, italic=italic)))
+                      rpr=font(t.mono, t.body_size - 3, color, bold=bold, italic=italic,
+                               literal=True)))
 
     add(style("FootnoteText", "Footnote Text", nxt="FootnoteText",
               ppr=para(after=40, line=240), rpr=font(t.sans, t.body_size - 4, t.muted)))
@@ -614,8 +619,8 @@ def specimen_code():
     lines = [[("SELECT", "KeywordTok"), (" region,", None)],
              [("       SUM", "FunctionTok"), ("(weighted_cost) / ", None),
               ("NULLIF", "FunctionTok"), ("(", None), ("SUM", "FunctionTok"),
-              ("(settled_volume), ", None), ("0", "DecValTok"), (") ", None),
-              ("AS", "KeywordTok"), (" cost_per_txn", None)],
+              ("(settled_volume), ", None), ("0", "DecValTok"), (")", None)],
+             [("         AS", "KeywordTok"), (" cost_per_txn", None)],
              [("  FROM", "KeywordTok"), (" ledger.settlement_fact", None)],
              [(" WHERE", "KeywordTok"), (" period ", None), ("BETWEEN", "KeywordTok"),
               (" ", None), ("'2025-09-01'", "StringTok"), (" ", None),
@@ -804,6 +809,14 @@ def build(t, base_docx):
         hdr_ftr_xml("ftr", [("", None), ("CONFIDENTIAL", None), ("PAGE ", "PAGE")]),
         encoding="utf-8")
 
+    if t.justify:
+        # Justified lines without hyphenation open wide gaps between words. Pandoc
+        # copies this setting from the reference document into each report.
+        settings = src / "word/settings.xml"
+        tab_stop = re.search(r"<w:defaultTabStop [^>]*/>", settings.read_text(encoding="utf-8"))
+        settings.write_text(settings.read_text(encoding="utf-8").replace(
+            tab_stop.group(0), tab_stop.group(0) + "<w:autoHyphenation/>"), encoding="utf-8")
+
     rels_path = src / "word/_rels/document.xml.rels"
     ns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
     rels_path.write_text(rels_path.read_text(encoding="utf-8").replace(
@@ -875,7 +888,7 @@ THEMES = [
           body_size=22, body_line=276, body_after=120, justify=True,
           numbered=True, number_hang=False, title_kind="rule", table_kind="hairline",
           code_bg="F8F5F5", code_fg="24292F", meta_mono=False,
-          margin_x=int(2.5 * CM), margin_y=int(2.3 * CM), title_size=52,
+          margin_x=int(2.8 * CM), margin_y=int(2.3 * CM), title_size=52,
           heads=[Head(36, "8C1D34", bold=False, bottom=12, before=480, after=180),
                  Head(28, "8C1D34", before=380, after=110),
                  Head(24, "1A1A1A", before=300, after=90),
