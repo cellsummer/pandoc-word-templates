@@ -928,10 +928,11 @@ THEMES = [
           numbered=False, number_hang=False, title_kind="reverse", table_kind="dark",
           code_bg="F8F5F5", code_fg="24292F",
           margin_x=int(2.4 * CM), margin_y=int(2.2 * CM), title_size=60,
-          heads=[Head(42, "2C2C30", top=24, before=560, after=180),
+          # Colour falls with rank: burgundy for H1-H2, ink for H3-H4, grey below.
+          heads=[Head(42, "8C1D34", top=24, before=560, after=180),
                  Head(29, "8C1D34", before=420, after=120),
                  Head(23, "2C2C30", before=320, after=90),
-                 Head(20, "8C1D34", caps=True, before=280, after=80),
+                 Head(20, "2C2C30", caps=True, before=280, after=80),
                  Head(20, "6A6A70", before=250, after=70),
                  Head(22, "6A6A70", bold=False, italic=True, before=220, after=60)],
           **BURGUNDY),
