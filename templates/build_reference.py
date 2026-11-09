@@ -551,16 +551,18 @@ def list_numbering():
 
 # ---------------------------------------------------------------- header, foot, page
 def hdr_ftr_xml(tag, parts):
+    """One line of left, centre and right parts, each (text, field code, field result)."""
     runs = []
-    for i, (text, field_code) in enumerate(parts):
+    for i, (text, field_code, result) in enumerate(parts):
         if i:
             runs.append("<w:r><w:tab/></w:r>")
-        runs.append(f'<w:r><w:t xml:space="preserve">{text}</w:t></w:r>')
+        if text:
+            runs.append(f'<w:r><w:t xml:space="preserve">{esc(text)}</w:t></w:r>')
         if field_code:
             runs.append('<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
-                        f'<w:r><w:instrText xml:space="preserve">{field_code}</w:instrText></w:r>'
+                        f'<w:r><w:instrText xml:space="preserve">{esc(field_code)}</w:instrText></w:r>'
                         '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
-                        '<w:r><w:t>1</w:t></w:r>'
+                        f'<w:r><w:t xml:space="preserve">{esc(result)}</w:t></w:r>'
                         '<w:r><w:fldChar w:fldCharType="end"/></w:r>')
     sid = "Header" if tag == "hdr" else "Footer"
     return (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:{tag} {W} {R}>'
@@ -810,12 +812,14 @@ def build(t, base_docx):
     (src / "word/numbering.xml").write_text(
         num.replace("</w:numbering>", extra + "</w:numbering>"), encoding="utf-8")
 
+    # The head names the report, from its Title paragraph, and carries the
+    # classification once. The foot carries only the page number.
     (src / "word/header1.xml").write_text(
-        hdr_ftr_xml("hdr", [("", None), ("", None),
-                            ("CONFIDENTIAL — INTERNAL USE ONLY", None)]),
+        hdr_ftr_xml("hdr", [("", ' STYLEREF "Title" ', "Report title"), ("", None, None),
+                            ("CONFIDENTIAL — INTERNAL USE ONLY", None, None)]),
         encoding="utf-8")
     (src / "word/footer1.xml").write_text(
-        hdr_ftr_xml("ftr", [("", None), ("CONFIDENTIAL", None), ("PAGE ", "PAGE")]),
+        hdr_ftr_xml("ftr", [("", None, None), ("", None, None), ("PAGE ", " PAGE ", "1")]),
         encoding="utf-8")
 
     if t.justify:
