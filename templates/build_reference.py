@@ -303,7 +303,9 @@ def styles_xml(t):
 
     add(f'<w:docDefaults><w:rPrDefault><w:rPr>{font(t.sans, t.body_size, t.ink)}'
         '<w:lang w:val="en-GB"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr>'
-        f'{para(after=t.body_after, line=t.body_line)}</w:pPr></w:pPrDefault></w:docDefaults>')
+        # Absent, widow control is off: one line of a paragraph could sit alone on a page.
+        f'<w:widowControl/>{para(after=t.body_after, line=t.body_line)}'
+        '</w:pPr></w:pPrDefault></w:docDefaults>')
     add('<w:latentStyles w:defLockedState="0" w:defUIPriority="0" w:defSemiHidden="0"'
         ' w:defUnhideWhenUsed="0" w:defQFormat="0" w:count="276"/>')
     add('<w:style w:type="paragraph" w:default="1" w:styleId="Normal">'
