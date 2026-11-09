@@ -359,11 +359,11 @@ def styles_xml(t):
               ppr=para(after=100, ind=int(0.7 * CM), line=t.body_line,
                        borders=border("bottom", t.hair, space=3))))
 
+    # One caption face for tables and figures; only the spacing differs.
     add(style("Caption", "Caption", nxt="BodyText", ppr=para(before=60, after=200),
-              rpr=font(t.sans, t.body_size - 3, t.muted, bold=True)))
+              rpr=font(t.sans, t.body_size - 2, t.accent, bold=True)))
     add(style("TableCaption", "Table Caption", based="Caption", nxt="BodyText",
-              ppr=para(before=160, after=60, keep_next=True),
-              rpr=font(t.sans, t.body_size - 3, t.accent, bold=True, caps=True, track=16)))
+              ppr=para(before=160, after=60, keep_next=True)))
     add(style("ImageCaption", "Image Caption", based="Caption", nxt="BodyText",
               ppr=para(before=60, after=200)))
     add(style("Figure", "Figure", based="BodyText", nxt="ImageCaption",
