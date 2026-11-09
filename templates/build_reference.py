@@ -196,14 +196,15 @@ def title_block(t):
     elif t.title_kind == "plain":
         title_rule = border("bottom", t.rule, space=4)
     s = [style("Title", "Title", nxt="Subtitle", link="TitleChar",
-               ppr=para(before=0, after=60, keep_next=True, **box,
+               ppr=para(before=0, after=60, keep_next=True, **box, hyphenate=False,
                         borders=skin_edges + title_rule),
                rpr=font(t.display, t.title_size, title_c,
                         bold=t.title_kind not in ("open", "plain"))),
          style("TitleChar", "Title Char", kind="character", based="DefaultParagraphFont",
                quick=False, rpr=font(t.display, t.title_size, title_c)),
          style("Subtitle", "Subtitle", nxt="Author", link="SubtitleChar",
-               ppr=para(before=0, after=160, keep_next=True, **box, borders=skin_edges),
+               ppr=para(before=0, after=160, keep_next=True, **box, hyphenate=False,
+                        borders=skin_edges),
                rpr=font(t.sans, 24, sub_c, italic=t.title_kind == "rule")),
          style("SubtitleChar", "Subtitle Char", kind="character",
                based="DefaultParagraphFont", quick=False, rpr=font(t.sans, 24, sub_c)),
@@ -235,6 +236,7 @@ def heading_styles(t):
         s.append(style(f"Heading{i}", f"heading {i}", nxt="BodyText",
                        link=f"Heading{i}Char",
                        ppr=para(before=h.before, after=h.after, keep_next=True,
+                                hyphenate=False,
                                 keep_lines=True, shade=h.shade or None, borders=bdr,
                                 numid=HEADING_NUM if numbered else None, ilvl=i - 1,
                                 ind=left, hanging=hang, right=shift or None, tabs=tabs),
@@ -444,16 +446,16 @@ def styles_xml(t):
               rpr=font(t.sans, t.body_size - 5, t.muted, track=14)))
 
     add(style("Lead", "Lead", based="BodyText", nxt="BodyText", custom=True,
-              ppr=para(before=200, after=200, shade=t.warn_soft, jc=None, ind=BAR,
+              ppr=para(before=200, after=200, shade=t.warn_soft, jc=None, hyphenate=False, ind=BAR,
                        right=PAD, borders=pad(t.warn_soft) +
                                           border("left", t.warn, sz=18, space=8)),
               rpr=font(t.sans, t.body_size, t.ink, bold=True)))
     add(style("Note", "Note", based="BodyText", nxt="BodyText", custom=True,
-              ppr=para(before=200, after=200, shade=t.soft, jc=None, ind=BAR,
+              ppr=para(before=200, after=200, shade=t.soft, jc=None, hyphenate=False, ind=BAR,
                        right=PAD, borders=pad(t.soft) + border("left", t.accent, sz=18, space=8)),
               rpr=font(t.sans, t.body_size - 1, t.ink)))
     add(style("Caution", "Caution", based="Note", nxt="BodyText", custom=True,
-              ppr=para(before=200, after=200, shade=t.warn_soft, jc=None, ind=BAR,
+              ppr=para(before=200, after=200, shade=t.warn_soft, jc=None, hyphenate=False, ind=BAR,
                        right=PAD,
                        borders=pad(t.warn_soft) + border("left", t.warn, sz=18, space=8))))
     add(style("SourceNote", "Source Note", based="BodyText", nxt="BodyText", custom=True,
