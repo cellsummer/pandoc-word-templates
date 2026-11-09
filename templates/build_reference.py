@@ -275,7 +275,7 @@ def table_style(t):
         banding = ""
     elif t.table_kind == "open":
         borders = border("insideH", t.hair)
-        head = (f'<w:rPr>{font(t.sans, t.body_size - 3, t.muted, bold=True, track=12)}</w:rPr>'
+        head = (f'<w:rPr>{font(t.sans, t.body_size - 2, t.ink, bold=True)}</w:rPr>'
                 f'<w:tcPr><w:tcBorders>{border("bottom", t.accent, sz=16)}'
                 "</w:tcBorders></w:tcPr>")
         banding = t.zebra
@@ -907,7 +907,7 @@ THEMES = [
           margin_x=int(2.8 * CM), margin_y=int(2.5 * CM), title_size=64,
           heads=[Head(44, "202226", bold=False, bottom=24, before=620, after=200),
                  Head(30, "202226", before=440, after=130),
-                 Head(24, "5E1323", before=340, after=100),
+                 Head(24, "202226", before=340, after=100),
                  Head(22, "202226", before=280, after=80),
                  Head(19, "6B7280", caps=True, before=260, after=70),
                  Head(21, "6B7280", bold=False, italic=True, before=220, after=60)],
