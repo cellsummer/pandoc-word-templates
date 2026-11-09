@@ -430,11 +430,13 @@ def styles_xml(t):
                        borders=border("bottom", t.accent, sz=8, space=3)),
               rpr=font(t.display, t.body_size + 4, t.accent, bold=True, caps=True, track=24)))
     dot = f'<w:tab w:val="right" w:leader="dot" w:pos="{t.text_w}"/>'
-    for n, (ind, col, bold) in enumerate([(0, t.ink, True), (int(0.6 * CM), t.muted, False),
-                                          (int(1.2 * CM), t.muted, False)], start=1):
+    # Level 1 stands out by colour and space, not weight: a bold entry drew a bold
+    # dot leader across the page.
+    for n, (ind, col, before) in enumerate([(0, t.ink, 80), (int(0.6 * CM), t.muted, 0),
+                                            (int(1.2 * CM), t.muted, 0)], start=1):
         add(style(f"TOC{n}", f"toc {n}", nxt="BodyText", quick=False,
-                  ppr=para(after=40, ind=ind, tabs=dot),
-                  rpr=font(t.sans, t.body_size - 1, col, bold=bold)))
+                  ppr=para(before=before, after=40, ind=ind, tabs=dot),
+                  rpr=font(t.sans, t.body_size - 1, col)))
 
     tabs = (f'<w:tab w:val="center" w:pos="{t.text_w // 2}"/>'
             f'<w:tab w:val="right" w:pos="{t.text_w}"/>')
